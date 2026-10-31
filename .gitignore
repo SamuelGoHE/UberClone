@@ -44,3 +44,6 @@ yarn-error.*
 .env
 backend/.env
 backend/node_modules/
+
+# editor
+.vscode/
