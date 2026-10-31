@@ -64,6 +64,8 @@ export function AuthProvider({ children }) {
       await signInWithEmailAndPassword(auth, email.trim(), password);
       return null;
     } catch (error) {
+      // Solo en desarrollo: muestra en la terminal el error real cuando no es uno conocido.
+      if (__DEV__ && !AUTH_ERRORS[error.code]) console.warn('signIn error:', error.code, error.message);
       return AUTH_ERRORS[error.code] ?? UNKNOWN_ERROR;
     }
   }, []);
