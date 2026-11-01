@@ -25,7 +25,8 @@ function validate(email, password) {
   return errors;
 }
 
-export default function LoginScreen() {
+// CONCEPTO: las pantallas del navegador reciben la prop navigation, con la que se pasa a otra pantalla.
+export default function LoginScreen({ navigation }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -121,6 +122,13 @@ export default function LoginScreen() {
               )}
             </Pressable>
           </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>¿No tienes cuenta?</Text>
+            <Pressable onPress={() => navigation.navigate('CreateAccount')} accessibilityRole="link">
+              <Text style={styles.footerLink}>Crear cuenta</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -135,6 +143,9 @@ const styles = StyleSheet.create({
   title: { ...typography.title, color: colors.text },
   subtitle: { ...typography.body, color: colors.textMuted },
   form: { gap: spacing.md },
+  footer: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
+  footerText: { ...typography.body, color: colors.textMuted },
+  footerLink: { ...typography.bodyStrong, color: colors.text },
   button: {
     backgroundColor: colors.primary,
     borderRadius: radius.md,
