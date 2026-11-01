@@ -1,5 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+} from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { subscribeToDriver } from '../services/firebase/drivers';
 
@@ -17,6 +22,15 @@ const AUTH_ERRORS = {
   'auth/network-request-failed': 'No hay conexión. Revisa tu internet.',
 };
 const UNKNOWN_ERROR = 'No pudimos iniciar sesión. Inténtalo de nuevo.';
+
+// Al crear la cuenta, cada error indica en qué campo se muestra. 'form' = no es de ningún campo.
+const SIGN_UP_ERRORS = {
+  'auth/email-already-in-use': { field: 'email', message: 'Ese correo ya tiene una cuenta.' },
+  'auth/invalid-email': { field: 'email', message: 'El correo no es válido.' },
+  'auth/weak-password': { field: 'password', message: 'Mínimo 6 caracteres.' },
+  'auth/network-request-failed': { field: 'form', message: 'No hay conexión. Revisa tu internet.' },
+};
+const UNKNOWN_SIGN_UP_ERROR = { field: 'form', message: 'No pudimos crear la cuenta. Inténtalo de nuevo.' };
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -70,11 +84,24 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Devuelve null si salió bien o { field, message } con el campo donde mostrar el error.
+  // Si sale bien, Firebase inicia sesión solo con la cuenta nueva y la navegación hace el resto
+  // (como la cuenta no tiene perfil todavía, el conductor llega al registro).
+  const signUp = useCallback(async (email, password) => {
+    try {
+      await createUserWithEmailAndPassword(auth, email.trim(), password);
+      return null;
+    } catch (error) {
+      if (__DEV__ && !SIGN_UP_ERRORS[error.code]) console.warn('signUp error:', error.code, error.message);
+      return SIGN_UP_ERRORS[error.code] ?? UNKNOWN_SIGN_UP_ERROR;
+    }
+  }, []);
+
   const signOut = useCallback(() => firebaseSignOut(auth), []);
 
   const value = useMemo(
-    () => ({ user, driver, loading, signIn, signOut }),
-    [user, driver, loading, signIn, signOut],
+    () => ({ user, driver, loading, signIn, signUp, signOut }),
+    [user, driver, loading, signIn, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
