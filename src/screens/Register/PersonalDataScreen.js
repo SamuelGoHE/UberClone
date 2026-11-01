@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateField from '../../components/forms/DateField';
 import SelectField from '../../components/forms/SelectField';
-import { validateSelection } from '../../utils/validators';
+import { formatDate } from '../../utils/formatDate';
+import { validateBirthDate, validateSelection } from '../../utils/validators';
 import { colors, radius, spacing, typography } from '../../theme/colors';
 
 // PANTALLA PROVISIONAL: sirve para probar los selectores uno a uno. El formulario completo
@@ -15,29 +17,45 @@ const GENDER_OPTIONS = [
 
 export default function PersonalDataScreen() {
   const [gender, setGender] = useState('');
-  const [genderError, setGenderError] = useState(null);
+  const [birthDate, setBirthDate] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  const clearError = (field) => setErrors((current) => ({ ...current, [field]: undefined }));
+
+  function validate() {
+    setErrors({
+      gender: validateSelection(gender) ?? undefined,
+      birthDate: validateBirthDate(birthDate) ?? undefined,
+    });
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <View style={styles.content}>
+        <DateField
+          label="Fecha de nacimiento"
+          value={birthDate}
+          onChange={(next) => {
+            setBirthDate(next);
+            clearError('birthDate');
+          }}
+          error={errors.birthDate}
+        />
         <SelectField
           label="Género"
           value={gender}
           options={GENDER_OPTIONS}
           onChange={(next) => {
             setGender(next);
-            setGenderError(null);
+            clearError('gender');
           }}
-          error={genderError}
+          error={errors.gender}
         />
-        <Pressable
-          style={styles.button}
-          onPress={() => setGenderError(validateSelection(gender))}
-          accessibilityRole="button"
-        >
+        <Pressable style={styles.button} onPress={validate} accessibilityRole="button">
           <Text style={styles.buttonText}>Validar</Text>
         </Pressable>
-        <Text style={styles.debug}>Valor guardado: {gender || '(vacío)'}</Text>
+        <Text style={styles.debug}>Fecha: {formatDate(birthDate) || '(vacía)'}</Text>
+        <Text style={styles.debug}>Género: {gender || '(vacío)'}</Text>
       </View>
     </SafeAreaView>
   );
