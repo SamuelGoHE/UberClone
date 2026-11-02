@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
-import { validatePersonalData } from '../utils/validators';
+import { validatePersonalData, validateVehicleData } from '../utils/validators';
 
 const RegistrationContext = createContext(null);
 
@@ -13,6 +13,16 @@ const initialState = {
     gender: '',
     language: 'es',
   },
+  vehicle: {
+    category: '',
+    plate: '',
+    brand: '',
+    model: '',
+    year: '',
+    color: '',
+    capacity: '',
+    photo: null,
+  },
 };
 
 // CONCEPTO: useReducer centraliza cómo cambia el estado. La pantalla no modifica el estado directamente:
@@ -21,6 +31,8 @@ function reducer(state, action) {
   switch (action.type) {
     case 'SET_PERSONAL_FIELD':
       return { ...state, personal: { ...state.personal, [action.field]: action.value } };
+    case 'SET_VEHICLE_FIELD':
+      return { ...state, vehicle: { ...state.vehicle, [action.field]: action.value } };
     default:
       return state;
   }
@@ -36,14 +48,39 @@ export function RegistrationProvider({ children }) {
     [],
   );
 
+  const setVehicleField = useCallback(
+    (field, value) => dispatch({ type: 'SET_VEHICLE_FIELD', field, value }),
+    [],
+  );
+
   // Errores actuales de cada campo (objeto vacío = la pestaña está completa). Se recalculan solo
   // cuando cambian los datos. Qué errores se muestran lo decide cada pantalla.
   const personalErrors = useMemo(() => validatePersonalData(state.personal), [state.personal]);
   const isPersonalComplete = Object.keys(personalErrors).length === 0;
+  const vehicleErrors = useMemo(() => validateVehicleData(state.vehicle), [state.vehicle]);
+  const isVehicleComplete = Object.keys(vehicleErrors).length === 0;
 
   const value = useMemo(
-    () => ({ personal: state.personal, setPersonalField, personalErrors, isPersonalComplete }),
-    [state.personal, setPersonalField, personalErrors, isPersonalComplete],
+    () => ({
+      personal: state.personal,
+      setPersonalField,
+      personalErrors,
+      isPersonalComplete,
+      vehicle: state.vehicle,
+      setVehicleField,
+      vehicleErrors,
+      isVehicleComplete,
+    }),
+    [
+      state.personal,
+      setPersonalField,
+      personalErrors,
+      isPersonalComplete,
+      state.vehicle,
+      setVehicleField,
+      vehicleErrors,
+      isVehicleComplete,
+    ],
   );
 
   return <RegistrationContext.Provider value={value}>{children}</RegistrationContext.Provider>;

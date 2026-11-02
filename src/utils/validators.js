@@ -123,3 +123,20 @@ export function validateCapacity(value, category) {
   }
   return null;
 }
+
+// Valida todos los datos del vehículo juntos. Devuelve un objeto con un mensaje por cada campo
+// inválido; si todo está bien, devuelve un objeto vacío (la pestaña está completa).
+// La capacidad depende de la categoría (XL exige mínimo 6), por eso recibe data.category.
+export function validateVehicleData(data, today = new Date()) {
+  const checks = {
+    category: validateSelection(data.category, 'Selecciona una categoría.'),
+    plate: validatePlate(data.plate),
+    brand: validateShortText(data.brand),
+    model: validateShortText(data.model),
+    year: validateYear(data.year, today),
+    color: validateSelection(data.color),
+    capacity: validateCapacity(data.capacity, data.category),
+    photo: validateImage(data.photo, 'Agrega la foto del vehículo.'),
+  };
+  return Object.fromEntries(Object.entries(checks).filter(([, message]) => message));
+}
