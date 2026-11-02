@@ -111,3 +111,129 @@ Registrar cada entrada en el momento de usar la herramienta. Plantilla:
 - Archivos y commit: .env (no versionado); src/context/AuthContext.js — e0d1a84
 - Verificación: Tras reiniciar Expo con "npx expo start -c" y sin variables exportadas en la terminal, el login funciona en el iPhone con el usuario de prueba.
 - Aprendizaje: (completar por el integrante: por qué las variables de la terminal ganan al .env y cómo se detectó)
+
+---
+
+### Entrada #8
+- Fecha: 2026-10-31
+- Integrante: Samuel Gómez
+- Herramienta: IA de diseño en Figma (indicar cuál) para los mockups; Claude Code (Claude Sonnet 5.5) para la guía y la revisión
+- Objetivo: Diseñar en Figma las pantallas del flujo de registro antes de programar la navegación: Crear cuenta (vacía y con errores), Registro pestaña 1 (Datos personales) y pestaña 2 (Vehículo).
+- Prompt: Con Claude: "hola, como vamos, voy a empezar por toda la parte de navegacion, ya despues de eso me vas guaindo, primero hare los mockups" / "use figma para estas pestanas, agregalo en bitacora" (se adjuntaron las capturas de los mockups). Con la IA de Figma: (pegar aquí el prompt literal que usaste, sin datos personales ni llaves)
+- Resumen de la respuesta: Claude propuso diseñar primero el mapa de navegación y las pantallas clave (Crear cuenta, tres pestañas, estado de la cuenta y Drawer) y, al recibir las capturas, las comparó con los campos del PDF (secciones 2 y 3).
+- Qué se usó / modificó / descartó: Se usó el diseño de Figma como referencia para programar. Pendiente de completar: qué se conservó y qué se descartó de lo generado por la IA; diseño de la pestaña 3 (Documentos), de la pantalla de cuenta pendiente de aprobación y del Drawer.
+- Archivos y commit: Figma: archivo "UberClone Conductor" (agregar enlace); sin cambios de código todavía
+- Verificación: Comparación campo por campo de las pestañas 1 y 2 contra las tablas del PDF.
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #9
+- Fecha: 2026-10-31
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Instalar React Navigation, crear las pantallas vacías y los navegadores (Stack condicional y pestañas del registro).
+- Prompt: "instalare las librerias y despues de eso las pantallas vacias, ire haciendo las cosas, te cuento y me vas corrigiendo" / "ya la instalacion quedo, se instalaron 8 paquetes, fueron estos" / "el drawer pide algun requisito?" / "perfecto, entonces comenzamos con las pantallas vacias?" / "listo, revisame para poder continuar con los navegadores" / "como hago todo eso jasjajsajsajs" / "estoy creando las pnatallas vacias y por el momento van bien, estoy haciendo pruebas para luego continuar con los validadores"
+- Resumen de la respuesta: Claude verificó la instalación (expo-doctor solo marcó un parche de expo), confirmó que los requisitos del Drawer (Gesture Handler, Reanimated, Worklets) se cumplen y que babel-preset-expo agrega el plugin de worklets. Propuso construir la navegación por pasos (stack de autenticación, pestañas del registro y navegador raíz) y recomendó un único Stack con pantallas condicionales según la sesión y el estado del conductor.
+- Qué se usó / modificó / descartó: El integrante escribió los tres navegadores y las cinco pantallas. Se usó el Stack condicional (loading, sin sesión, sin perfil, aprobado, pendiente), un solo NavigationContainer y el botón provisional de cerrar sesión. El Drawer queda instalado pero sin usar hasta las pantallas de perfil, historial y ganancias.
+- Archivos y commit: src/navigation/RootNavigator.js, src/navigation/RegistrationTabs.js, pantallas de src/screens — b69eef4
+- Verificación: Navegación probada en el iPhone: Login y Crear cuenta, registro con tres pestañas, pantalla de revisión y cambio de estado del conductor. (Completar con lo que se vio en cada caso.)
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #10
+- Fecha: 2026-10-31
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Crear los validadores del registro y la pantalla Crear cuenta con registro en Firebase Auth (signUp).
+- Prompt: "creare entonces las reglas de las pantallas del avqnce" / "me confirmas esto porfa" (resumen de las reglas de validación de edad, contraseña, placa, capacidad y listas) / "sip, crear cuenta" / "donde va el singup" / "pero he hecho varios cambios, revisa mi proyecto completo y me das tu desicion final" / "revisame el createaccountscreen, para ver si continuo con claudinary" / "ya hice las pruebas, realmente senti que todo paso bien"
+- Resumen de la respuesta: Claude propuso la lista de reglas del PDF para las pestañas 1 y 2 como funciones puras que devuelven null o un mensaje, y las probó con casos de borde (cumplir 18 hoy, mañana, placa en minúsculas, XL con 4 y 6 pasajeros). Indicó que signUp va en AuthContext con un mapa de errores que dice en qué campo mostrar cada uno (incluido "form") y revisó la pantalla Crear cuenta.
+- Qué se usó / modificó / descartó: El integrante escribió validators.js, signUp y CreateAccountScreen. Decisiones propias: mayor de edad se cumple con la fecha completa y cumplir 18 hoy es válido; la contraseña no se recorta y el mínimo es 6 (el de Firebase); no hay tope de pasajeros para Económico y Premium; las listas usan una sola función validateSelection. Pendiente: actualizar el mockup de Figma (dice mínimo 8 caracteres) y reutilizar validateEmail en el login.
+- Archivos y commit: src/utils/validators.js — 324d12a; src/context/AuthContext.js y src/screens/Auth/CreateAccountScreen.js — 6060d37
+- Verificación: Validadores probados con Node usando una fecha fija. Crear cuenta probada en el iPhone con cinco casos (cuenta nueva, correo repetido, errores por campo, modo avión, volver a entrar con la cuenta nueva); según el integrante, todo funcionó. (Completar el detalle de lo que se vio.)
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #11
+- Fecha: 2026-10-31
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5) y consulta externa (indicar cuál) para el plan de componentes
+- Objetivo: Evaluar un plan para construir tres componentes reutilizables (SelectField, DateField y PhotoField) antes de las pestañas del registro.
+- Prompt: "estuve consultando y seria bueno implementar esto para esta fase de desarrollo, dime que opinas y dejamos aqui por hi, haz las entradas que consideres para la bitacora." (se pegó el plan de los selectores reutilizables; indicar de dónde salió)
+- Resumen de la respuesta: Claude evaluó el plan: es coherente con los mockups y con los validadores existentes; recomendó construir un componente por commit empezando por SelectField, revisar la documentación de SDK 58 antes de instalar expo-image-picker y el selector de fecha, y hacer que DateField entregue un objeto Date porque validateBirthDate lo espera.
+- Qué se usó / modificó / descartó: (completar: qué parte del plan se adopta y cómo se divide el trabajo, ya que el código de los componentes lo escribe el integrante)
+- Archivos y commit: sin cambios de código todavía
+- Verificación: Revisión del plan contra el diseño de Figma y los validadores.
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #12
+- Fecha: 2026-11-01
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Construir los componentes reutilizables SelectField (lista desplegable) y DateField (selector de fecha) para las pestañas del registro.
+- Prompt: "esto es lo que tengo en el figma" (captura de la pestaña 1 de Datos personales) / "revisalo" (código de SelectField) / "hare las pruebs, antes de eso segun lo que hice entendi esto, corrigeme si estoy mal" / "ok, seguire con datefile, para ir llenando la informacion del conductor" / "se crea casi que con la misma estructura que selctfield?" / "asi voy" (primeras líneas de DateField) / "termine, revisamelo" / "ya hice las pruebas y subi el commit, que sigue? photofield?"
+- Resumen de la respuesta: Claude relacionó cada elemento del mockup con un componente y un validador existente. Revisó SelectField (componente controlado con hoja modal, opciones { value, label }, zona segura) y recomendó cerrar el teclado al abrirlo y decidir el color del check. Para DateField indicó leer la documentación de @react-native-community/datetimepicker 9.2.1 (SDK 58), explicó qué se reutiliza de SelectField y qué cambia (selector del sistema, diferencias iPhone y Android) y probó formatDate con Node (ceros, bisiesto, entradas inválidas).
+- Qué se usó / modificó / descartó: El integrante escribió ambos componentes y formatDate. Se adoptó Keyboard.dismiss() al abrir, el borrador de fecha en iPhone con botón "Listo", el valor inicial de 18 años atrás y el plugin del selector de fecha en app.json. Las listas usan { value, label } para que la base de datos no dependa del idioma. Pendiente: guardar la fecha como texto AAAA-MM-DD al enviar a Firestore y definir dónde viven las opciones de género y color.
+- Archivos y commit: src/components/forms/SelectField.js — 378108a; src/components/forms/DateField.js, src/utils/formatDate.js, app.json, package.json — 12bb016
+- Verificación: formatDate probada con Node (14/03/1995, 05/02/2000, 31/12/2008, 29/02/2008, hora 23:59, null y fecha inválida). SelectField y DateField probados en iPhone (elegir, cancelar, error, teclado, fecha futura bloqueada, validateBirthDate). (Completar detalle de lo observado.)
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #13
+- Fecha: 2026-11-01
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Construir PhotoField (foto de perfil y foto del vehículo, desde cámara o galería) con expo-image-picker.
+- Prompt: "me ayudas a realizar ese, que debe contener?" / "nonono, hablo del photofield" / "que ta esta asi" (versión con cierre de la hoja antes de abrir la cámara)
+- Resumen de la respuesta: Claude revisó la API instalada de expo-image-picker 58.0.10 en node_modules y encontró que la opción aspect solo funciona en Android: en iPhone el recorte es siempre cuadrado, lo que puede cortar la placa en la foto del vehículo. Validó el uso de requestCameraPermissionsAsync, launchCameraAsync, launchImageLibraryAsync y mediaTypes: ['images']. Aprobó la solución con onDismiss para abrir la cámara solo cuando la hoja terminó de cerrarse en iPhone.
+- Qué se usó / modificó / descartó: El integrante escribió el componente y añadió closeThen con onDismiss, los errores bajo el campo y quality 0.7. Pendiente: activar allowsEditing solo para la foto de perfil y no para la del vehículo; un botón a Ajustes cuando se niega el permiso; la subida a Cloudinary (la foto hoy es solo una ruta local).
+- Archivos y commit: src/components/forms/PhotoField.js — ecb041c
+- Verificación: Pendiente de completar: pruebas en iPhone de tomar foto, elegir de galería, cambiar, quitar, permiso negado, cancelar y foto del vehículo con la placa visible.
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #14
+- Fecha: 2026-10-30 a 2026-11-01
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Aclarar el flujo de trabajo con Git (ramas, Pull Requests, merge), las buenas prácticas de comentarios y el avance del proyecto.
+- Prompt: "pero por que me haces crear una rama fundamentos, no es mejor subir todo en main? al fin y al cabo estoy trbajando solo" / "vale, pero se hicieron dos commits, ademas la profesora tendria que navegar por ramas para ver los commits" / "vale, ya te entendi, ahora dime como borrar un commit, se subieros dos iguales" / "el merge se puede hacer al final del proyecto?" / "vale, entonces como hago el pr el marge" / "y si la bitacora la comittamos al final?" / "una pregunta, algunas cosas en el codigo las estoy comentando, en el taller de pokemon se pidio hacerlo, no se si es una mala practica o no, simplemnte lo hago para seguir los trbajos anteriores, esta bien o no? sabes si se pidio en el pdf?" / "como ves que voy hasta el momento?"
+- Resumen de la respuesta: Claude explicó que la rúbrica pide ramas, Pull Requests revisados y merge en main, y recomendó una rama por fase con PR al terminar. Mostró las opciones de merge (merge commit, squash, rebase), cómo juntar commits antes de subir y por qué no dejar el merge ni la bitácora para el final. Aclaró que el PDF solo exige el comentario en inglés "AI-assisted" y que los demás comentarios son opcionales, útiles si explican el porqué. Evaluó el avance: base sólida (Firebase, sesión, navegación, validadores, componentes) y, como riesgos, trabajo sin integrar y bitácora atrasada.
+- Qué se usó / modificó / descartó: Se adoptó una rama por fase con PR y merge commit. Los dos commits de la fase 1 se juntaron en uno antes del merge. Se descartó borrar commits con reescritura forzada del historial. Se mantiene el estilo de comentarios "CONCEPTO" por ahora y se consultará a la profesora si es obligatorio.
+- Archivos y commit: ff378bd (fase 1), PR #1, #2 y #3; sin cambios de código propios de esta entrada
+- Verificación: Revisión del historial con git log y del estado de origin/main tras cada merge.
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #15
+- Fecha: 2026-11-01
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Crear el estado compartido del registro (RegistrationContext con useReducer) y el formulario completo de la pestaña Datos personales.
+- Prompt: "ya hice la registrationcontext, esto fue lo que hice" (se pegó una descripción del contexto, el formulario de 8 campos, el correo de solo lectura, las reglas de errores y validatePersonalData) / "perfecto, tendre en cuenta las cosas por mejorar" / "dejare asi por hoy"
+- Resumen de la respuesta: Claude revisó RegistrationContext, PersonalDataScreen, SegmentedField, las constantes y validatePersonalData, y probó la validación conjunta con datos reales (completo, vacío, menor de edad, documento corto, sin foto). Señaló como puntos por mejorar: el estado touched vive solo en la pantalla y el conductor no sabrá qué falta cuando el botón de envío esté deshabilitado; el teclado puede quedar desalineado con la cabecera; el verde de éxito tiene poco contraste como texto.
+- Qué se usó / modificó / descartó: El integrante escribió el contexto, el formulario y SegmentedField. Decisiones propias: el error de un campo de texto aparece al salir del campo (onBlur) y no al escribir el primer carácter; documento y celular solo aceptan dígitos; el correo viene de la cuenta y no es editable; los datos solo viven en memoria y no en AsyncStorage. Pendiente: decidir cómo mostrar todos los errores desde el botón de envío, probar el teclado y limitar la longitud de documento y celular.
+- Archivos y commit: src/context/RegistrationContext.js, src/screens/Register/PersonalDataScreen.js, src/components/forms/SegmentedField.js, src/constants/registration.js, src/utils/validators.js — e4146be
+- Verificación: validatePersonalData probada con Node (5 casos). Probado en iPhone según el integrante (completar: escribir y cambiar de pestaña, errores al salir del campo, solo dígitos, edad, texto de pestaña completa).
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #16
+- Fecha: 2026-11-02
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Construir la pestaña Vehículo (categoría, placa, marca, modelo, año, color, capacidad y foto) y cerrar la fase 3.
+- Prompt: "buenos dias, hoy seguiremos con la pestana de vehiculo para que cerremos la fase 3" / "la fase 4 la necesito para la primer entrega?" / "revisa lo que hice, ya hare el psuh entonces si hay que hacerles cambios a la bitacora hazlos"
+- Resumen de la respuesta: Claude propuso el orden: constantes (categorías y colores), validateVehicleData, sección vehicle en el contexto y la pantalla. Aclaró que el PDF no indica qué se entrega en cada fecha y recomendó preguntarlo a la profesora, explicando qué incluye la fase 4 (pestaña 3, subida a Cloudinary y envío del registro). Revisó el código y probó validateVehicleData (completo, vacío, XL con 4 pasajeros, Económico con 4, placa de moto, año futuro, marca de 31 letras).
+- Qué se usó / modificó / descartó: El integrante escribió CategoryField, las constantes, validateVehicleData, la sección vehicle del contexto y VehicleScreen. Decisiones propias: las categorías usan tarjetas y no una lista; se quitó el tope de 4 pasajeros del diseño porque el PDF no lo define; la placa se guarda en mayúsculas y sin espacios; al cambiar de categoría se reevalúa la capacidad; la lista de colores es propia porque el PDF no la define. Pendientes: no hay año mínimo (un año como 0001 pasa la validación); la foto del vehículo todavía permite recorte (en iPhone es cuadrado y puede cortar la placa); touched sigue duplicado en las dos pantallas.
+- Archivos y commit: src/components/forms/CategoryField.js, src/constants/registration.js, src/context/RegistrationContext.js, src/screens/Register/VehicleScreen.js, src/utils/validators.js — (pendiente de commit)
+- Verificación: validateVehicleData probada con Node (8 casos). (Completar: pruebas en iPhone de categoría, placa en mayúsculas, XL con 4 y 6 pasajeros, cambio de categoría con capacidad escrita, foto con la placa visible.)
+- Aprendizaje: (completar por el integrante)
