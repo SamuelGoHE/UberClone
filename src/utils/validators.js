@@ -71,6 +71,20 @@ export function validateImage(uri, message = 'Agrega una foto.') {
   return isEmpty(uri) ? message : null;
 }
 
+// Valida todos los datos personales juntos. Devuelve un objeto con un mensaje por cada campo
+// inválido; si todo está bien, devuelve un objeto vacío (la pestaña está completa).
+export function validatePersonalData(data) {
+  const checks = {
+    photo: validateImage(data.photo, 'Agrega tu foto de perfil.'),
+    fullName: validateFullName(data.fullName),
+    document: validateDocument(data.document),
+    phone: validatePhone(data.phone),
+    birthDate: validateBirthDate(data.birthDate),
+    gender: validateSelection(data.gender),
+  };
+  return Object.fromEntries(Object.entries(checks).filter(([, message]) => message));
+}
+
 // ---------- Vehículo ----------
 
 // La placa se pasa a mayúsculas antes de validar, como pide el enunciado.
