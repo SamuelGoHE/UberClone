@@ -32,3 +32,8 @@ export const VEHICLE_COLORS = [
   { value: 'brown', label: 'Café' },
   { value: 'other', label: 'Otro' },
 ];
+
+// PROVISIONAL: el enunciado exige las tres pestañas (Datos personales, Vehículo y Documentos) completas
+// para habilitar "Enviar registro". Como Documentos aún no existe, por ahora bastan las dos primeras.
+// Cuando se construya Documentos, este número pasa a 3 y se suma su validación al contexto.
+export const REQUIRED_TABS = 2;
