@@ -37,10 +37,9 @@ export default function DateField({
         value: start,
         mode: 'date',
         maximumDate,
-        onChange: (event, date) => {
-          // 'dismissed' = el usuario cerró el diálogo sin elegir: no se cambia nada.
-          if (event.type === 'set' && date) onChange(date);
-        },
+        // onValueChange solo se llama cuando el usuario confirma una fecha. Si cierra el diálogo
+        // sin elegir, se llama onDismiss y no se cambia nada. (onChange quedó obsoleto en esta versión.)
+        onValueChange: (event, date) => onChange(date),
       });
       return;
     }
@@ -89,9 +88,7 @@ export default function DateField({
               maximumDate={maximumDate}
               themeVariant="light"
               textColor={colors.text}
-              onChange={(event, date) => {
-                if (date) setDraft(date);
-              }}
+              onValueChange={(event, date) => setDraft(date)}
             />
             <View style={styles.actions}>
               <Pressable style={[styles.action, styles.cancel]} onPress={() => setOpen(false)} accessibilityRole="button">
