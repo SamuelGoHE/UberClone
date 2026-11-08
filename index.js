@@ -1,3 +1,5 @@
+// Debe ser lo primero que se importa: lo necesita el menú lateral (Drawer).
+import 'react-native-gesture-handler';
 import { registerRootComponent } from 'expo';
 
 import App from './App';

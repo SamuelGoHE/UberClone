@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
 import RootNavigator from './src/navigation/RootNavigator';
@@ -7,11 +8,13 @@ import RootNavigator from './src/navigation/RootNavigator';
 // de AuthProvider porque lee la sesión con useAuth.
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <RootNavigator />
-        <StatusBar style="dark" />
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <RootNavigator />
+          <StatusBar style="dark" />
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

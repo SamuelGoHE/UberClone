@@ -3,8 +3,8 @@ import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import CreateAccountScreen from '../screens/Auth/CreateAccountScreen';
-import HomeScreen from '../screens/Home/HomeScreen';
 import PendingApprovalScreen from '../screens/Register/PendingApprovalScreen';
+import DrawerNavigator from './DrawerNavigator';
 import RegistrationTabs from './RegistrationTabs';
 import { useAuth } from '../context/AuthContext';
 import { DRIVER_STATUS } from '../constants/driverStatus';
@@ -28,7 +28,7 @@ function LoadingScreen() {
 //   cargando            -> Loading
 //   sin sesión          -> Login / CreateAccount
 //   sesión sin perfil   -> Registration (las 3 pestañas)
-//   perfil aprobado     -> Home
+//   perfil aprobado     -> Main (el menú lateral, con Inicio)
 //   perfil en revisión  -> PendingApproval
 // El NavigationContainer va una sola vez en toda la app.
 export default function RootNavigator() {
@@ -47,7 +47,7 @@ export default function RootNavigator() {
         ) : !driver ? (
           <Stack.Screen name="Registration" component={RegistrationTabs} />
         ) : driver.status === DRIVER_STATUS.APPROVED ? (
-          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Main" component={DrawerNavigator} />
         ) : (
           <Stack.Screen name="PendingApproval" component={PendingApprovalScreen} />
         )}

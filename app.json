@@ -29,6 +29,12 @@
           "photosPermission": "UberClone Conductor accede a tus fotos para que elijas tu foto de perfil y la del vehículo.",
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "UberClone Conductor usa tu ubicación para mostrarte en el mapa y para que los pasajeros cercanos puedan encontrarte cuando estás disponible."
+        }
       ]
     ]
   }
