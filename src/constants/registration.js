@@ -33,7 +33,11 @@ export const VEHICLE_COLORS = [
   { value: 'other', label: 'Otro' },
 ];
 
-// PROVISIONAL: el enunciado exige las tres pestañas (Datos personales, Vehículo y Documentos) completas
-// para habilitar "Enviar registro". Como Documentos aún no existe, por ahora bastan las dos primeras.
-// Cuando se construya Documentos, este número pasa a 3 y se suma su validación al contexto.
-export const REQUIRED_TABS = 2;
+// El enunciado exige las tres pestañas (Datos personales, Vehículo y Documentos) completas y válidas
+// para habilitar "Enviar registro".
+export const REQUIRED_TABS = 3;
+
+// El enunciado pide la revisión técnico-mecánica "si aplica según el año del vehículo", sin decir desde
+// cuándo. Valor didáctico: un carro particular la necesita pasados 6 años desde su modelo.
+// Es una suposición: conviene confirmarla con la profesora.
+export const TECHNICAL_REVIEW_AFTER_YEARS = 6;

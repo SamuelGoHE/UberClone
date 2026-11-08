@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { uploadImage } from '../services/cloudinary';
 import { saveDriverRegistration } from '../services/firebase/drivers';
 import { buildDriverRecord } from '../utils/buildDriverRecord';
+import { requiresTechnicalReview, validateDocumentsData } from '../utils/documentValidators';
 import { validatePersonalData, validateVehicleData } from '../utils/validators';
 
 const RegistrationContext = createContext(null);
@@ -28,6 +29,17 @@ const initialState = {
     capacity: '',
     photo: null,
   },
+  documents: {
+    licenseNumber: '',
+    licensePhoto: null,
+    licenseExpiry: null,
+    soatPhoto: null,
+    soatExpiry: null,
+    techPhoto: null,
+    techExpiry: null,
+    mercadoPagoEmail: '',
+    acceptedTerms: false,
+  },
 };
 
 // CONCEPTO: useReducer centraliza cómo cambia el estado. La pantalla no modifica el estado directamente:
@@ -38,6 +50,8 @@ function reducer(state, action) {
       return { ...state, personal: { ...state.personal, [action.field]: action.value } };
     case 'SET_VEHICLE_FIELD':
       return { ...state, vehicle: { ...state.vehicle, [action.field]: action.value } };
+    case 'SET_DOCUMENT_FIELD':
+      return { ...state, documents: { ...state.documents, [action.field]: action.value } };
     default:
       return state;
   }
@@ -59,6 +73,10 @@ export function RegistrationProvider({ children }) {
     (field, value) => dispatch({ type: 'SET_VEHICLE_FIELD', field, value }),
     [],
   );
+  const setDocumentField = useCallback(
+    (field, value) => dispatch({ type: 'SET_DOCUMENT_FIELD', field, value }),
+    [],
+  );
 
   // Errores actuales de cada campo (objeto vacío = la pestaña está completa). Se recalculan solo
   // cuando cambian los datos. Qué errores se muestran lo decide cada pantalla.
@@ -66,12 +84,18 @@ export function RegistrationProvider({ children }) {
   const isPersonalComplete = Object.keys(personalErrors).length === 0;
   const vehicleErrors = useMemo(() => validateVehicleData(state.vehicle), [state.vehicle]);
   const isVehicleComplete = Object.keys(vehicleErrors).length === 0;
+  // La revisión técnico-mecánica de Documentos depende del año del vehículo: por eso se pasa vehicle.year.
+  const documentsErrors = useMemo(
+    () => validateDocumentsData(state.documents, state.vehicle.year),
+    [state.documents, state.vehicle.year],
+  );
+  const isDocumentsComplete = Object.keys(documentsErrors).length === 0;
 
-  // El botón "Enviar registro" solo se habilita cuando las pestañas requeridas están completas.
-  const completedTabs = (isPersonalComplete ? 1 : 0) + (isVehicleComplete ? 1 : 0);
+  // El botón "Enviar registro" solo se habilita cuando las tres pestañas están completas (lo exige el enunciado).
+  const completedTabs = (isPersonalComplete ? 1 : 0) + (isVehicleComplete ? 1 : 0) + (isDocumentsComplete ? 1 : 0);
   const canSubmit = completedTabs === REQUIRED_TABS;
 
-  // Envía el registro: sube las dos fotos a Cloudinary, guarda el documento en Firestore con
+  // Envía el registro: sube todas las fotos a Cloudinary, guarda el documento en Firestore con
   // status pending y listo. Al existir el documento, AuthContext lo detecta y la navegación lleva
   // sola a "En revisión": por eso no hay navigate aquí ni se vuelve a poner submitting en false.
   const submit = useCallback(async () => {
@@ -79,16 +103,25 @@ export function RegistrationProvider({ children }) {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const [photoUrl, vehiclePhotoUrl] = await Promise.all([
+      // La foto de la revisión técnico-mecánica solo existe si el vehículo la exige.
+      const needsTechnicalReview = requiresTechnicalReview(state.vehicle.year);
+      // CONCEPTO: Promise.all lanza todas las subidas a la vez y espera a que terminen: es más rápido
+      // que subirlas una por una, y si una falla, todo el envío falla y se puede reintentar.
+      const [photoUrl, vehiclePhotoUrl, licensePhotoUrl, soatPhotoUrl, techPhotoUrl] = await Promise.all([
         uploadImage(state.personal.photo),
         uploadImage(state.vehicle.photo),
+        uploadImage(state.documents.licensePhoto),
+        uploadImage(state.documents.soatPhoto),
+        needsTechnicalReview ? uploadImage(state.documents.techPhoto) : Promise.resolve(null),
       ]);
       const record = buildDriverRecord({
         personal: state.personal,
         vehicle: state.vehicle,
+        documents: state.documents,
         email: user.email,
         photoUrl,
         vehiclePhotoUrl,
+        documentUrls: { licensePhotoUrl, soatPhotoUrl, techPhotoUrl },
       });
       await saveDriverRegistration(user.uid, record);
     } catch (error) {
@@ -96,7 +129,7 @@ export function RegistrationProvider({ children }) {
       setSubmitError('No pudimos enviar tu registro. Revisa tu conexión e inténtalo de nuevo.');
       setSubmitting(false);
     }
-  }, [submitting, canSubmit, state.personal, state.vehicle, user]);
+  }, [submitting, canSubmit, state.personal, state.vehicle, state.documents, user]);
 
   const value = useMemo(
     () => ({
@@ -108,6 +141,10 @@ export function RegistrationProvider({ children }) {
       setVehicleField,
       vehicleErrors,
       isVehicleComplete,
+      documents: state.documents,
+      setDocumentField,
+      documentsErrors,
+      isDocumentsComplete,
       completedTabs,
       canSubmit,
       submitting,
@@ -123,6 +160,10 @@ export function RegistrationProvider({ children }) {
       setVehicleField,
       vehicleErrors,
       isVehicleComplete,
+      state.documents,
+      setDocumentField,
+      documentsErrors,
+      isDocumentsComplete,
       completedTabs,
       canSubmit,
       submitting,
