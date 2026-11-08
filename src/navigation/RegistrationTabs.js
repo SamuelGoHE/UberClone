@@ -24,8 +24,8 @@ function SignOutButton() {
 // CONCEPTO: el ícono de cada pestaña lee el estado del registro (por eso vive dentro del proveedor) y
 // muestra su número o, si la pestaña está completa, un check verde.
 function TabIcon({ number, tab, focused }) {
-  const { isPersonalComplete, isVehicleComplete } = useRegistration();
-  const done = { personal: isPersonalComplete, vehicle: isVehicleComplete, documents: false }[tab];
+  const { isPersonalComplete, isVehicleComplete, isDocumentsComplete } = useRegistration();
+  const done = { personal: isPersonalComplete, vehicle: isVehicleComplete, documents: isDocumentsComplete }[tab];
   return <TabBadge number={number} done={done} focused={focused} />;
 }
 
