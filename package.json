@@ -28,7 +28,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "request": "node --env-file=.env tools/passenger/send-request.mjs"
   },
   "private": true
 }
