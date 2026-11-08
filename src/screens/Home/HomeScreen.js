@@ -1,11 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
-import MapView, { Circle } from 'react-native-maps';
+import MapView, { Circle, Marker, Polyline } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import IncomingRequestCard from '../../components/trip/IncomingRequestCard';
 import { useAuth } from '../../context/AuthContext';
 import useAvailability from '../../hooks/useAvailability';
 import useDriverLocation from '../../hooks/useDriverLocation';
+import useTripRequests from '../../hooks/useTripRequests';
 import { updateDriverLocation } from '../../services/firebase/locations';
+import { acceptTrip, rejectTrip } from '../../services/firebase/trips';
 import { colors, radius, spacing, typography } from '../../theme/colors';
 
 // Centro de Medellín: el mapa abre aquí mientras llega la ubicación real del conductor.
@@ -25,6 +28,52 @@ export default function HomeScreen({ navigation }) {
     active: available,
     onLocation: (coords) => updateDriverLocation(user.uid, coords).catch(() => {}),
   });
+
+  // Solo se escuchan las solicitudes mientras el conductor está disponible.
+  const { request } = useTripRequests(user.uid, available);
+
+  // Respuesta a la solicitud: mientras se guarda, busy bloquea los botones para que no se toquen dos veces.
+  const [busy, setBusy] = useState(false);
+  const [requestError, setRequestError] = useState(null);
+
+  // Con cada solicitud nueva se limpia el estado de la anterior.
+  const requestId = request?.id;
+  useEffect(() => {
+    setBusy(false);
+    setRequestError(null);
+  }, [requestId]);
+
+  // Aceptar y rechazar (o dejar vencer el tiempo) escriben en el viaje; la tarjeta desaparece sola cuando
+  // el viaje deja de estar en "requested", porque useTripRequests lo detecta.
+  const respond = useCallback(
+    async (action) => {
+      if (!requestId) return;
+      setBusy(true);
+      setRequestError(null);
+      try {
+        await action(requestId);
+      } catch {
+        setRequestError('No pudimos enviar tu respuesta. Inténtalo de nuevo.');
+        setBusy(false);
+      }
+    },
+    [requestId],
+  );
+  const handleAccept = useCallback(() => respond((id) => acceptTrip(id, user.uid)), [respond, user.uid]);
+  const handleReject = useCallback(() => respond(rejectTrip), [respond]);
+
+  // Al llegar una solicitud, el mapa encuadra recogida y destino por encima de la tarjeta.
+  useEffect(() => {
+    if (!request || !mapRef.current) return;
+    mapRef.current.fitToCoordinates(
+      [
+        { latitude: request.origin.lat, longitude: request.origin.lng },
+        { latitude: request.destination.lat, longitude: request.destination.lng },
+      ],
+      { edgePadding: { top: 120, right: 60, bottom: 560, left: 60 }, animated: true },
+    );
+    // Solo depende del id: Firestore puede reenviar la misma solicitud y el mapa no debe volver a encuadrar.
+  }, [requestId]);
 
   // La primera vez que llega la ubicación, el mapa se centra en el conductor.
   useEffect(() => {
@@ -67,6 +116,25 @@ export default function HomeScreen({ navigation }) {
             strokeWidth={1}
           />
         ) : null}
+        {request ? (
+          <>
+            {/* Línea recta provisional entre recogida y destino: la ruta real llega con el viaje en curso. */}
+            <Polyline
+              coordinates={[
+                { latitude: request.origin.lat, longitude: request.origin.lng },
+                { latitude: request.destination.lat, longitude: request.destination.lng },
+              ]}
+              strokeColor={colors.primary}
+              strokeWidth={4}
+            />
+            <Marker coordinate={{ latitude: request.origin.lat, longitude: request.origin.lng }} anchor={{ x: 0.5, y: 0.5 }}>
+              <View style={styles.pickupMarker} />
+            </Marker>
+            <Marker coordinate={{ latitude: request.destination.lat, longitude: request.destination.lng }} anchor={{ x: 0.5, y: 0.5 }}>
+              <View style={styles.destinationMarker} />
+            </Marker>
+          </>
+        ) : null}
       </MapView>
 
       <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
@@ -88,48 +156,58 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.menuSpacer} />
       </View>
 
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
-        <View style={styles.handle} />
-        <View style={styles.headings}>
-          <Text style={styles.title}>{available ? 'Estás disponible' : 'No estás disponible'}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-        </View>
-
-        {permissionDenied ? (
-          <View style={styles.warning}>
-            <Text style={styles.warningText}>
-              Necesitamos tu ubicación para ponerte disponible. Actívala en Ajustes.
-            </Text>
-            <Pressable onPress={() => Linking.openSettings()} accessibilityRole="button">
-              <Text style={styles.warningLink}>Abrir Ajustes</Text>
-            </Pressable>
+      {request ? (
+        <IncomingRequestCard
+          request={request}
+          busy={busy}
+          error={requestError}
+          onAccept={handleAccept}
+          onReject={handleReject}
+        />
+      ) : (
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
+          <View style={styles.handle} />
+          <View style={styles.headings}>
+            <Text style={styles.title}>{available ? 'Estás disponible' : 'No estás disponible'}</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
           </View>
-        ) : null}
 
-        <View style={styles.switchRow}>
-          <View style={styles.switchTexts}>
-            <Text style={styles.switchTitle}>{available ? 'Disponible' : 'No disponible'}</Text>
-            <Text style={styles.switchHint}>
-              {available ? 'Recibirás solicitudes de viaje' : 'No recibirás solicitudes'}
-            </Text>
+          {permissionDenied ? (
+            <View style={styles.warning}>
+              <Text style={styles.warningText}>
+                Necesitamos tu ubicación para ponerte disponible. Actívala en Ajustes.
+              </Text>
+              <Pressable onPress={() => Linking.openSettings()} accessibilityRole="button">
+                <Text style={styles.warningLink}>Abrir Ajustes</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          <View style={styles.switchRow}>
+            <View style={styles.switchTexts}>
+              <Text style={styles.switchTitle}>{available ? 'Disponible' : 'No disponible'}</Text>
+              <Text style={styles.switchHint}>
+                {available ? 'Recibirás solicitudes de viaje' : 'No recibirás solicitudes'}
+              </Text>
+            </View>
+            <Switch
+              value={available}
+              onValueChange={setAvailable}
+              disabled={switchDisabled}
+              trackColor={{ false: colors.border, true: colors.success }}
+              ios_backgroundColor={colors.border}
+              accessibilityLabel="Disponible"
+            />
           </View>
-          <Switch
-            value={available}
-            onValueChange={setAvailable}
-            disabled={switchDisabled}
-            trackColor={{ false: colors.border, true: colors.success }}
-            ios_backgroundColor={colors.border}
-            accessibilityLabel="Disponible"
-          />
-        </View>
 
-        {availabilityError ? <Text style={styles.error}>{availabilityError}</Text> : null}
+          {availabilityError ? <Text style={styles.error}>{availabilityError}</Text> : null}
 
-        <View style={styles.account}>
-          <View style={styles.accountDot} />
-          <Text style={styles.accountText}>Cuenta aprobada</Text>
+          <View style={styles.account}>
+            <View style={styles.accountDot} />
+            <Text style={styles.accountText}>Cuenta aprobada</Text>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -163,6 +241,9 @@ const styles = StyleSheet.create({
     ...SHADOW,
   },
   menuSpacer: { width: 48 },
+  // Marcadores de la solicitud: círculo verde en la recogida y cuadrado negro en el destino, como en el diseño.
+  pickupMarker: { width: 18, height: 18, borderRadius: 9, backgroundColor: colors.success, borderWidth: 3, borderColor: colors.surface },
+  destinationMarker: { width: 18, height: 18, backgroundColor: colors.primary, borderWidth: 3, borderColor: colors.surface },
   // Las tres rayas del botón de menú, dibujadas con Views (sin librería de íconos).
   menuBar: { width: 18, height: 2, borderRadius: 1, backgroundColor: colors.primary },
   pill: {
