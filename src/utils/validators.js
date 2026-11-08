@@ -105,11 +105,10 @@ export function validateShortText(value) {
   if (String(value).trim().length > 30) return 'Máximo 30 caracteres.';
   return null;
 }
-
 export function validateYear(value, today = new Date()) {
   if (isEmpty(value)) return REQUIRED;
   if (!/^\d{4}$/.test(String(value).trim())) return 'Debe tener 4 dígitos.';
-  if (Number(value) > today.getFullYear()) return 'El año no puede ser mayor al actual.';
+  if (Number(value) > today.getFullYear() + 1) return 'El año no puede ser mayor al siguiente.';
   return null;
 }
 

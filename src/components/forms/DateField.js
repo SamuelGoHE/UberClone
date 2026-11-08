@@ -12,7 +12,18 @@ function defaultStartDate() {
   return date;
 }
 
-// CONCEPTO: campo de fecha controlado, igual que SelectField. value es un Date (o null) y el componente
+// Para fechas de vencimiento (licencia, SOAT): solo se puede elegir desde mañana, y el selector abre en un año.
+function expiryLimits() {
+  const min = new Date();
+  min.setDate(min.getDate() + 1);
+  min.setHours(0, 0, 0, 0);
+  const start = new Date();
+  start.setFullYear(start.getFullYear() + 1);
+  return { start, min, max: undefined };
+}
+
+// CONCEPTO: campo de fecha controlado, igual que SelectField. kind='birth' (por defecto) es para fechas
+// pasadas, como el nacimiento; kind='expiry' es para vencimientos, que deben ser futuros. value es un Date (o null) y el componente
 // avisa con onChange(date). La regla de los 18 años NO vive aquí: la valida validateBirthDate.
 // iPhone y Android muestran el selector distinto: en iPhone va dentro de una hoja con "Listo",
 // en Android el sistema abre su propio cuadro de diálogo.
@@ -22,25 +33,28 @@ export default function DateField({
   onChange,
   error,
   placeholder = 'DD/MM/AAAA',
+  kind = 'birth',
   maximumDate = new Date(),
 }) {
   const [open, setOpen] = useState(false); // solo iPhone: hoja visible
   const [draft, setDraft] = useState(null); // solo iPhone: fecha que se está girando, aún sin confirmar
   const insets = useSafeAreaInsets();
   const text = formatDate(value);
+  // Fecha con la que abre el selector y límites que se pueden elegir, según el tipo de campo.
+  const limits = kind === 'expiry' ? expiryLimits() : { start: defaultStartDate(), min: undefined, max: maximumDate };
 
   function openPicker() {
     Keyboard.dismiss();
-    const start = value ?? defaultStartDate();
+    const start = value ?? limits.start;
     if (Platform.OS === 'android') {
       DateTimePickerAndroid.open({
         value: start,
         mode: 'date',
-        maximumDate,
-        onChange: (event, date) => {
-          // 'dismissed' = el usuario cerró el diálogo sin elegir: no se cambia nada.
-          if (event.type === 'set' && date) onChange(date);
-        },
+        minimumDate: limits.min,
+        maximumDate: limits.max,
+        // onValueChange solo se llama cuando el usuario confirma una fecha. Si cierra el diálogo
+        // sin elegir, se llama onDismiss y no se cambia nada. (onChange quedó obsoleto en esta versión.)
+        onValueChange: (event, date) => onChange(date),
       });
       return;
     }
@@ -82,16 +96,15 @@ export default function DateField({
             <View style={styles.handle} />
             <Text style={styles.sheetTitle}>{label}</Text>
             <DateTimePicker
-              value={draft ?? defaultStartDate()}
+              value={draft ?? limits.start}
               mode="date"
               display="spinner"
               locale="es-CO"
-              maximumDate={maximumDate}
+              minimumDate={limits.min}
+              maximumDate={limits.max}
               themeVariant="light"
               textColor={colors.text}
-              onChange={(event, date) => {
-                if (date) setDraft(date);
-              }}
+              onValueChange={(event, date) => setDraft(date)}
             />
             <View style={styles.actions}>
               <Pressable style={[styles.action, styles.cancel]} onPress={() => setOpen(false)} accessibilityRole="button">
