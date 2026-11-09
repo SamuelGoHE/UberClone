@@ -8,19 +8,10 @@ import {
 import HomeScreen from '../screens/Home/HomeScreen';
 import { CATEGORY_OPTIONS } from '../constants/registration';
 import { useAuth } from '../context/AuthContext';
+import { initialsOf } from '../utils/initials';
 import { colors, radius, spacing, typography } from '../theme/colors';
 
 const Drawer = createDrawerNavigator();
-
-// "María Fernanda Gómez" -> "MF"
-function initialsOf(fullName = '') {
-  return fullName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0].toUpperCase())
-    .join('');
-}
 
 // Contenido del menú lateral: quién es el conductor, las pantallas y, al final, cerrar sesión.
 function DrawerContent(props) {

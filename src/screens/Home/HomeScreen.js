@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import useAvailability from '../../hooks/useAvailability';
 import useDriverLocation from '../../hooks/useDriverLocation';
 import useTripRequests from '../../hooks/useTripRequests';
+import { setDriverAvailability } from '../../services/firebase/drivers';
 import { updateDriverLocation } from '../../services/firebase/locations';
 import { acceptTrip, rejectTrip } from '../../services/firebase/trips';
 import { colors, radius, spacing, typography } from '../../theme/colors';
@@ -59,7 +60,16 @@ export default function HomeScreen({ navigation }) {
     },
     [requestId],
   );
-  const handleAccept = useCallback(() => respond((id) => acceptTrip(id, user.uid)), [respond, user.uid]);
+  // Al aceptar, el conductor queda ocupado: en Firestore deja de estar disponible mientras dura el viaje, para
+  // que no le lleguen más solicitudes. Su preferencia guardada no cambia: al volver al Inicio se restaura sola.
+  const handleAccept = useCallback(
+    () =>
+      respond(async (id) => {
+        const accepted = await acceptTrip(id, user.uid);
+        if (accepted) setDriverAvailability(user.uid, false).catch(() => {});
+      }),
+    [respond, user.uid],
+  );
   const handleReject = useCallback(() => respond(rejectTrip), [respond]);
 
   // Al llegar una solicitud, el mapa encuadra recogida y destino por encima de la tarjeta.
