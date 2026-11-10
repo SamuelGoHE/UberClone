@@ -6,10 +6,12 @@ import CreateAccountScreen from '../screens/Auth/CreateAccountScreen';
 import PendingApprovalScreen from '../screens/Register/PendingApprovalScreen';
 import DrawerNavigator from './DrawerNavigator';
 import RegistrationTabs from './RegistrationTabs';
+import SummaryScreen from '../screens/Summary/SummaryScreen';
 import TripScreen from '../screens/Trip/TripScreen';
 import { useAuth } from '../context/AuthContext';
 import { useActiveTrip } from '../context/TripContext';
 import { DRIVER_STATUS } from '../constants/driverStatus';
+import { TRIP_STATUS } from '../constants/tripStatus';
 import { colors } from '../theme/colors';
 
 const Stack = createNativeStackNavigator();
@@ -32,6 +34,7 @@ function LoadingScreen() {
 //   sesión sin perfil   -> Registration (las 3 pestañas)
 //   perfil aprobado     -> Main (el menú lateral, con Inicio)
 //   aprobado y con un viaje en marcha -> ActiveTrip (reemplaza al Inicio hasta que el viaje termine)
+//   aprobado y con un viaje terminado por cobrar -> TripSummary (el resumen del cobro)
 //   perfil en revisión  -> PendingApproval
 // El NavigationContainer va una sola vez en toda la app.
 export default function RootNavigator() {
@@ -54,7 +57,11 @@ export default function RootNavigator() {
           <Stack.Screen name="Registration" component={RegistrationTabs} />
         ) : driver.status === DRIVER_STATUS.APPROVED ? (
           activeTrip ? (
-            <Stack.Screen name="ActiveTrip" component={TripScreen} />
+            activeTrip.status === TRIP_STATUS.COMPLETED ? (
+              <Stack.Screen name="TripSummary" component={SummaryScreen} />
+            ) : (
+              <Stack.Screen name="ActiveTrip" component={TripScreen} />
+            )
           ) : (
             <Stack.Screen name="Main" component={DrawerNavigator} />
           )

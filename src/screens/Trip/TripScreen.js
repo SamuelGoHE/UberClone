@@ -25,7 +25,7 @@ const MAP_PADDING = { top: 140, right: 60, bottom: 380, left: 60 };
 // CONCEPTO: el campo status del viaje decide qué se ve, sin navegar a mano:
 //   accepted / driver_arriving -> "Hacia la recogida": ruta desde el conductor hasta el pasajero.
 //   in_progress                -> "Hacia el destino": ruta desde la recogida hasta el destino.
-// Al finalizar, el viaje pasa a "completed", deja de estar activo y RootNavigator vuelve al Inicio.
+// Al finalizar, el viaje pasa a "completed" y RootNavigator muestra el resumen del cobro (SummaryScreen).
 export default function TripScreen() {
   const { activeTrip: trip } = useActiveTrip();
   const { user } = useAuth();
@@ -104,7 +104,12 @@ export default function TripScreen() {
     run(() => pickUpPassenger(tripId), 'No pudimos registrar que el pasajero subió. Inténtalo de nuevo.');
   const handleFinish = () =>
     run(
-      () => completeTrip(tripId, { ...estimate, commissionRate: PRICING.commissionRate }),
+      () =>
+        completeTrip(tripId, {
+          ...estimate,
+          commissionRate: PRICING.commissionRate,
+          paymentMethod: trip.paymentMethod,
+        }),
       'No pudimos finalizar el viaje. Inténtalo de nuevo.',
     );
   const handleCancel = () =>

@@ -1,9 +1,17 @@
 import { collection, doc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, where } from 'firebase/firestore';
+import { PAYMENT_METHODS, PAYMENT_STATUS } from '../../constants/paymentMethods';
 import { TRIP_STATUS } from '../../constants/tripStatus';
 import { db } from './index';
 
-// Los estados en los que el viaje sigue en marcha. En cualquiera de ellos se muestra la pantalla del viaje.
-export const ACTIVE_STATUSES = [TRIP_STATUS.ACCEPTED, TRIP_STATUS.DRIVER_ARRIVING, TRIP_STATUS.IN_PROGRESS];
+// Los estados en los que el viaje sigue abierto para el conductor: en marcha (accepted, driver_arriving,
+// in_progress) o terminado pero sin cobrar (completed). Mientras esté en uno de ellos se muestra la pantalla del
+// viaje o, en completed, el resumen del cobro. Al pasar a paid (o cancelled) el viaje se cierra.
+export const ACTIVE_STATUSES = [
+  TRIP_STATUS.ACCEPTED,
+  TRIP_STATUS.DRIVER_ARRIVING,
+  TRIP_STATUS.IN_PROGRESS,
+  TRIP_STATUS.COMPLETED,
+];
 
 // CONCEPTO: el viaje es un documento en trips/{id} y su campo status dice en qué paso va. El pasajero
 // (hoy el simulador) y el conductor no se hablan: los dos leen y escriben ese mismo documento.
@@ -28,7 +36,7 @@ export function subscribeToTripRequests(uid, onData, onError) {
 const activeTripsQuery = (uid) =>
   query(collection(db, 'trips'), where('driverId', '==', uid), where('status', 'in', ACTIVE_STATUSES));
 
-// El viaje que el conductor tiene en marcha: suyo (driverId) y todavía sin terminar. Entrega el viaje o null.
+// El viaje que el conductor tiene abierto: suyo (driverId) y todavía sin cerrar. Entrega el viaje o null.
 // Así, si cierra la app a mitad de camino, al abrirla vuelve a su viaje. Un filtro de igualdad más uno "in"
 // sobre campos distintos tampoco necesita índice compuesto.
 export function subscribeToActiveTrip(uid, onData, onError) {
@@ -42,12 +50,12 @@ export function subscribeToActiveTrip(uid, onData, onError) {
 // CONCEPTO: transacción. Lee el viaje y lo cambia solo si sigue en uno de los estados de partida (from).
 // Así, si el tiempo se vence justo cuando el conductor toca Aceptar (o el pasajero cancela a la vez), una de
 // las dos acciones gana y la otra no pisa a la primera. Devuelve true si el cambio se hizo y false si el
-// viaje ya no estaba en ese estado.
-async function moveTrip(tripId, from, changes) {
+// viaje ya no estaba en ese estado. isAllowed (opcional) es una condición extra sobre los datos del viaje.
+async function moveTrip(tripId, from, changes, isAllowed = () => true) {
   const tripRef = doc(db, 'trips', tripId);
   return runTransaction(db, async (transaction) => {
     const snapshot = await transaction.get(tripRef);
-    if (!snapshot.exists() || !from.includes(snapshot.data().status)) return false;
+    if (!snapshot.exists() || !from.includes(snapshot.data().status) || !isAllowed(snapshot.data())) return false;
     transaction.update(tripRef, changes);
     return true;
   });
@@ -88,16 +96,40 @@ export function pickUpPassenger(tripId) {
 }
 
 // El conductor finaliza el viaje: pasa a "completed" y se guardan la tarifa, la comisión y la ganancia neta,
-// junto con el porcentaje de comisión que se aplicó (si mañana cambia, el historial no se altera).
-export function completeTrip(tripId, { fare, commission, driverEarnings, commissionRate }) {
+// junto con el porcentaje de comisión que se aplicó (si mañana cambia, el historial no se altera). El estado
+// del pago arranca en "efectivo" si se cobra en mano o en "pendiente" si falta la confirmación de la pasarela.
+export function completeTrip(tripId, { fare, commission, driverEarnings, commissionRate, paymentMethod }) {
   return moveTrip(tripId, [TRIP_STATUS.IN_PROGRESS], {
     status: TRIP_STATUS.COMPLETED,
     fare,
     commission,
     driverEarnings,
     commissionRate,
+    paymentStatus: paymentMethod === PAYMENT_METHODS.CASH ? PAYMENT_STATUS.CASH : PAYMENT_STATUS.PENDING,
     completedAt: serverTimestamp(),
   });
+}
+
+// El cobro quedó resuelto: el viaje pasa a "paid" y se cierra. Solo se permite si el dinero está cobrado:
+// en efectivo (el conductor confirma que lo recibió) o con el pago de Mercado Pago aprobado.
+export function markTripPaid(tripId) {
+  return moveTrip(
+    tripId,
+    [TRIP_STATUS.COMPLETED],
+    { status: TRIP_STATUS.PAID, paidAt: serverTimestamp() },
+    (trip) => trip.paymentMethod === PAYMENT_METHODS.CASH || trip.paymentStatus === PAYMENT_STATUS.APPROVED,
+  );
+}
+
+// Si el pago con Mercado Pago está pendiente o fue rechazado, el conductor puede cobrar en efectivo: el método
+// pasa a efectivo y el resumen cambia solo a esa variante.
+export function switchToCash(tripId) {
+  return moveTrip(
+    tripId,
+    [TRIP_STATUS.COMPLETED],
+    { paymentMethod: PAYMENT_METHODS.CASH, paymentStatus: PAYMENT_STATUS.CASH },
+    (trip) => trip.paymentMethod !== PAYMENT_METHODS.CASH,
+  );
 }
 
 // Cancelar solo se puede antes de que el pasajero suba (el enunciado: "antes de in_progress").
