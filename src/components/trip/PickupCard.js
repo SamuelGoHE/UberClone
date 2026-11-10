@@ -5,9 +5,10 @@ import { PAYMENT_LABELS } from '../../constants/paymentMethods';
 import { initialsOf } from '../../utils/initials';
 import { colors, radius, spacing, typography } from '../../theme/colors';
 
-// Tarjeta del tramo "Hacia la recogida": quién es el pasajero, dónde recogerlo y cuánto falta. Los datos de
-// distancia y tiempo vienen de la ruta (route); si no hay, solo se muestra la dirección.
-export default function PickupCard({ trip, route, busy, error, onCancel }) {
+// Tarjeta del tramo "Hacia la recogida": quién es el pasajero, dónde recogerlo y cuánto falta, con los botones
+// Pasajero a bordo y Cancelar viaje. Los datos de distancia y tiempo vienen de la ruta (route); si no hay,
+// solo se muestra la dirección.
+export default function PickupCard({ trip, route, busy, error, onPickedUp, onCancel }) {
   const insets = useSafeAreaInsets();
   const categoryLabel = CATEGORY_OPTIONS.find((option) => option.value === trip.category)?.label;
   const paymentLabel = PAYMENT_LABELS[trip.paymentMethod] ?? trip.paymentMethod;
@@ -39,6 +40,15 @@ export default function PickupCard({ trip, route, busy, error, onCancel }) {
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
+      <Pressable
+        style={[styles.primary, busy && styles.disabled]}
+        onPress={onPickedUp}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="Pasajero a bordo"
+      >
+        <Text style={styles.primaryText}>Pasajero a bordo</Text>
+      </Pressable>
       <Pressable
         style={[styles.cancel, busy && styles.disabled]}
         onPress={onCancel}
@@ -89,7 +99,9 @@ const styles = StyleSheet.create({
   pickup: { gap: 2, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.background },
   address: { ...typography.body, color: colors.text },
   error: { ...typography.caption, color: colors.danger },
-  cancel: { alignItems: 'center', justifyContent: 'center', height: 44 },
+  primary: { height: 56, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+  primaryText: { ...typography.bodyStrong, color: colors.onPrimary },
+  cancel: { alignItems: 'center', justifyContent: 'center', height: 44, marginTop: -spacing.sm },
   disabled: { opacity: 0.5 },
   cancelText: { ...typography.bodyStrong, color: colors.danger },
 });

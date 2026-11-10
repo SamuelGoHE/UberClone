@@ -1,4 +1,4 @@
-import { collection, doc, onSnapshot, query, runTransaction, serverTimestamp, where } from 'firebase/firestore';
+import { collection, doc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, where } from 'firebase/firestore';
 import { TRIP_STATUS } from '../../constants/tripStatus';
 import { db } from './index';
 
@@ -25,16 +25,18 @@ export function subscribeToTripRequests(uid, onData, onError) {
   return onSnapshot(requests, (snapshot) => onData(snapshot.docs.map(toTrip)), onError);
 }
 
+const activeTripsQuery = (uid) =>
+  query(collection(db, 'trips'), where('driverId', '==', uid), where('status', 'in', ACTIVE_STATUSES));
+
 // El viaje que el conductor tiene en marcha: suyo (driverId) y todavía sin terminar. Entrega el viaje o null.
 // Así, si cierra la app a mitad de camino, al abrirla vuelve a su viaje. Un filtro de igualdad más uno "in"
 // sobre campos distintos tampoco necesita índice compuesto.
 export function subscribeToActiveTrip(uid, onData, onError) {
-  const active = query(
-    collection(db, 'trips'),
-    where('driverId', '==', uid),
-    where('status', 'in', ACTIVE_STATUSES),
+  return onSnapshot(
+    activeTripsQuery(uid),
+    (snapshot) => onData(snapshot.empty ? null : toTrip(snapshot.docs[0])),
+    onError,
   );
-  return onSnapshot(active, (snapshot) => onData(snapshot.empty ? null : toTrip(snapshot.docs[0])), onError);
 }
 
 // CONCEPTO: transacción. Lee el viaje y lo cambia solo si sigue en uno de los estados de partida (from).
@@ -52,7 +54,11 @@ async function moveTrip(tripId, from, changes) {
 }
 
 // El conductor acepta: el viaje pasa a "accepted" y desde ese momento es suyo (driverId).
-export function acceptTrip(tripId, uid) {
+// Un conductor no puede llevar dos viajes a la vez: si ya tiene uno en marcha, no se acepta otro y devuelve
+// false. (Esta revisión va antes de la transacción, no dentro: Firestore no permite consultas en transacciones.)
+export async function acceptTrip(tripId, uid) {
+  const active = await getDocs(activeTripsQuery(uid));
+  if (!active.empty) return false;
   return moveTrip(tripId, [TRIP_STATUS.REQUESTED], {
     status: TRIP_STATUS.ACCEPTED,
     driverId: uid,
@@ -71,6 +77,27 @@ export function rejectTrip(tripId) {
 // El conductor sale hacia el punto de recogida.
 export function startDriverArriving(tripId) {
   return moveTrip(tripId, [TRIP_STATUS.ACCEPTED], { status: TRIP_STATUS.DRIVER_ARRIVING });
+}
+
+// El pasajero sube al carro: el viaje pasa a "in_progress" y la ruta cambia hacia el destino.
+export function pickUpPassenger(tripId) {
+  return moveTrip(tripId, [TRIP_STATUS.ACCEPTED, TRIP_STATUS.DRIVER_ARRIVING], {
+    status: TRIP_STATUS.IN_PROGRESS,
+    startedAt: serverTimestamp(),
+  });
+}
+
+// El conductor finaliza el viaje: pasa a "completed" y se guardan la tarifa, la comisión y la ganancia neta,
+// junto con el porcentaje de comisión que se aplicó (si mañana cambia, el historial no se altera).
+export function completeTrip(tripId, { fare, commission, driverEarnings, commissionRate }) {
+  return moveTrip(tripId, [TRIP_STATUS.IN_PROGRESS], {
+    status: TRIP_STATUS.COMPLETED,
+    fare,
+    commission,
+    driverEarnings,
+    commissionRate,
+    completedAt: serverTimestamp(),
+  });
 }
 
 // Cancelar solo se puede antes de que el pasajero suba (el enunciado: "antes de in_progress").

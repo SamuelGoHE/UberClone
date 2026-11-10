@@ -52,7 +52,12 @@ export default function HomeScreen({ navigation }) {
       setBusy(true);
       setRequestError(null);
       try {
-        await action(requestId);
+        // false = la solicitud ya no se pudo responder (la tomó otro paso o ya hay un viaje en marcha). Si ya
+        // no existe, la tarjeta desaparece sola; si sigue ahí, se libera para poder rechazarla.
+        if ((await action(requestId)) === false) {
+          setRequestError('Esta solicitud ya no se puede responder.');
+          setBusy(false);
+        }
       } catch {
         setRequestError('No pudimos enviar tu respuesta. Inténtalo de nuevo.');
         setBusy(false);
@@ -67,6 +72,7 @@ export default function HomeScreen({ navigation }) {
       respond(async (id) => {
         const accepted = await acceptTrip(id, user.uid);
         if (accepted) setDriverAvailability(user.uid, false).catch(() => {});
+        return accepted;
       }),
     [respond, user.uid],
   );
