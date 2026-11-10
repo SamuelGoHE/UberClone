@@ -1,4 +1,4 @@
-import { doc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from './index';
 
 // CONCEPTO: onSnapshot deja una suscripción abierta que avisa cada vez que el documento cambia
@@ -17,4 +17,10 @@ export function subscribeToDriver(uid, onData, onError) {
 // Cuando el documento existe, la app lo detecta sola (subscribeToDriver) y pasa a "En revisión".
 export function saveDriverRegistration(uid, record) {
   return setDoc(doc(db, 'drivers', uid), { ...record, createdAt: serverTimestamp() });
+}
+
+// Marca al conductor como disponible o no. Cambia pocas veces, por eso vive en drivers/{uid}.
+// (La ubicación, que cambia cada pocos segundos, va aparte: ver locations.js.)
+export function setDriverAvailability(uid, isAvailable) {
+  return updateDoc(doc(db, 'drivers', uid), { isAvailable });
 }

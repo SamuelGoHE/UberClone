@@ -251,3 +251,115 @@ Registrar cada entrada en el momento de usar la herramienta. Plantilla:
 - Archivos y commit: src/services/cloudinary/index.js, src/utils/buildDriverRecord.js, src/services/firebase/drivers.js, src/components/registration/SubmitBar.js, src/context/RegistrationContext.js, src/navigation/RegistrationTabs.js, src/constants/registration.js, src/utils/formatDate.js — (pendiente de commit)
 - Verificación: Según el integrante, el envío funcionó de punta a punta. (Completar: las dos fotos aparecen en Cloudinary, existe drivers/{uid} en Firestore con status pending y la app pasó sola a "En revisión"; cambiar el campo status a approved lleva a la pantalla de inicio.)
 - Aprendizaje: (completar por el integrante: por qué el fetch de Expo no acepta { uri, type, name } y por qué un mensaje de error genérico puede esconder la causa real)
+
+---
+
+### Entrada #18
+- Fecha: 2026-11-08
+- Integrante: Samuel Gómez
+- Herramienta: IA de diseño en Figma (indicar cuál) para los mockups; Claude Code (Claude Sonnet 5.5) para la revisión
+- Objetivo: Diseñar en Figma las pantallas que faltaban (inicio, solicitud, viaje y cobro, ganancias, historial, perfil, menú lateral y pestaña de documentos) y revisar su cobertura frente al PDF.
+- Prompt: Con Claude: "buenas, buenas, continuare con el desarrollo del proyecto, he estado un poco perdido haciendo los disenos de las pantallas faltantes, ya pude terminar, mira como van, ya esta casi toda la app disenada" (se adjuntó una captura del tablero de Figma). Con la IA de Figma: (pegar aquí el prompt literal, sin datos personales ni llaves)
+- Resumen de la respuesta: Claude comparó el tablero con la sección 3 del PDF: Inicio (3 variantes), Solicitud, Viaje y cobro (Aprobado, Pendiente, Rechazado, Efectivo), Ganancias, Historial con filtros, vacío y detalle, Perfil, Registro, Login, En revisión y menú lateral. Recomendó congelar el diseño y construir, y propuso un orden de desarrollo: registro, Inicio con mapa, solicitudes, viaje, cobro en efectivo, Mercado Pago, ganancias e historial y extras.
+- Qué se usó / modificó / descartó: Se usa el tablero como referencia de implementación. Se decidió simular las solicitudes de pasajero con un script, porque este proyecto es solo la app del conductor. (Completar qué se conservó y qué se descartó de lo generado por la IA de Figma.)
+- Archivos y commit: Figma: archivo "UberClone Conductor" (agregar enlace); sin cambios de código
+- Verificación: Comparación de cada pantalla del tablero con la lista de pantallas y campos del PDF.
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #19
+- Fecha: 2026-11-08
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Revisar la pestaña Documentos y pagos del registro (licencia, SOAT, revisión técnico-mecánica, correo de Mercado Pago y términos).
+- Prompt: "estuve haciendo los documentos, me guie basicamente por la estructura que tenia de datos personales y vehiculo, ya hice la prueba y quedo bien, hare el commit pero antes te mostrare la estructura" (se pegó el código de DocumentsScreen)
+- Resumen de la respuesta: Claude revisó DocumentsScreen, documentValidators, CheckboxField, los cambios de DateField (kind expiry), el contexto y buildDriverRecord. Probó los validadores y encontró dos problemas: validateExpiryDate acepta la fecha de hoy con una hora posterior a las 00:00 (el PDF pide "posterior a hoy"), y validateYear se cambió a "no mayor al año siguiente", mientras el PDF dice "no mayor al año actual". Señaló como decisión propia el umbral de 6 años para la revisión técnico-mecánica y que las fotos de documentos quedan con enlace público en Cloudinary.
+- Qué se usó / modificó / descartó: El integrante escribió toda la pestaña. Decisiones propias: la revisión técnico-mecánica solo se exige si el vehículo tiene 6 años o más; el número de licencia admite de 5 a 20 letras o números; la comisión se muestra desde PRICING. Pendientes que siguen abiertos al 2026-11-08: corregir validateExpiryDate comparando solo fechas, y decidir si se vuelve a la regla del año actual o se documenta la del año siguiente.
+- Archivos y commit: src/screens/Register/DocumentsScreen.js, src/utils/documentValidators.js, src/components/forms/CheckboxField.js, src/components/forms/DateField.js — 4f27041 y c01b1ca (PR #5)
+- Verificación: Validadores probados con Node con fecha fija; envío de punta a punta probado en el iPhone según el integrante. (Completar el detalle de lo observado.)
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #20
+- Fecha: 2026-11-08
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5) para la guía y la revisión; ChatGPT para redactar un resumen técnico del trabajo
+- Objetivo: Construir el menú lateral (Drawer) y la pantalla de Inicio con mapa, ubicación en tiempo real e interruptor Disponible.
+- Prompt: Con Claude: "voy a empezar a crear el menu lateral, primeramente con el nombre y estado de cuenta, ayudame con eso" / "con que erramienta se genero que? claro, hay que seguir en modo tutor mi hermano" / "los escribi yo como asi jajsajsjasjas" / "osea, lo escribi yo pero no sabia como explicar que fue lo que hice y para que sonara mas tecnico le dije a chat gpt que me pusiera todo el texto de lo que hice personalmente, ya te entendi". Con ChatGPT: (pegar aquí el prompt literal con el que se redactó el resumen)
+- Resumen de la respuesta: Claude revisó DrawerNavigator, App.js, index.js, los hooks useDriverLocation y useAvailability, locations.js y HomeScreen. Verificó en node_modules que timeInterval solo funciona en Android y probó toCoords y shouldEmit (rumbo -1, null y 0; intervalos de 4,9, 5 y 6 segundos). Señaló riesgos: las reglas de Firestore en modo de prueba caducan a los 30 días, un conductor que cierra la app disponible deja isAvailable en true y una ubicación vieja, y los errores de escritura de ubicación se ignoran en silencio. Aclaró que el resumen redactado con ChatGPT también es uso de IA y debe declararse.
+- Qué se usó / modificó / descartó: El integrante escribió el código. Decisiones propias: la ubicación vive en driverLocations/{uid} y no en drivers/{uid}; el deslizamiento del menú está desactivado; el último estado de disponibilidad se guarda en AsyncStorage y se refleja en Firestore; el límite de escritura cada 5 segundos se controla con shouldEmit porque timeInterval no aplica en iPhone. El resumen de ChatGPT se usó para explicar el trabajo; se corrigió el malentendido de que describía trabajo de otra herramienta.
+- Archivos y commit: src/navigation/DrawerNavigator.js, src/hooks/useDriverLocation.js, src/hooks/useAvailability.js, src/services/firebase/locations.js, src/utils/location.js, src/screens/Home/HomeScreen.js, App.js, index.js — d2e3094
+- Verificación: toCoords y shouldEmit probadas con Node (8 casos revisados por Claude). (Completar: pruebas en iPhone del permiso, del interruptor, de la escritura cada ~5 s en driverLocations/{uid}, de pasar a No disponible y de salir de la pantalla.)
+- Aprendizaje: (completar por el integrante: qué hace la función de limpieza de watchPositionAsync y por qué la ubicación va en otro documento)
+
+---
+
+### Entrada #21
+- Fecha: 2026-11-08
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Revisar el simulador de pasajero (script de Node en tools/) que crea solicitudes de viaje en Firestore para probar la app del conductor.
+- Prompt: "Tak, estoy pensando en hacer un script en tools para simular el envío pues de una petición de un viaje, porque realmente no tengo muy claro si tengo que hacer como tal otra aplicación que simule pues como tal un pasajero o pues tengo pensado hacer como un HTML, como una simulación que llegue al Fairbase y al Fairstore en donde pues se simule pues como tal una petición. Entonces estoy creando como tal un script que me mande una petición como para ir probando. Ya después de esto, no sé, depende de lo que me conteste la profesora, pues miro si implemento en la misma aplicación móvil o desarrollo pues como tal otra pantalla como de prueba para hacer la simulación. Entonces en estos momentos hice los tools, ¿cierto? Entonces necesito saber si están bien creados, si están bien estructurados. Ya hice las pruebas y realmente llegan al Firestore. La verdad sí llegan, pero entonces ¿qué me" (el mensaje quedó cortado)
+- Resumen de la respuesta: Claude confirmó que el PDF no pide una app de pasajero y que un script es suficiente. Revisó send-request.mjs y estimate.mjs y ejecutó el script en modo --dry-run (solo lecturas): un viaje XL de 4,7 km y 11 min dio tarifa 16.600, comisión 3.320 y ganancia neta 13.280, coherente con la fórmula del PDF. Advirtió que el script depende de reglas de Firestore abiertas (cuando se endurezcan hará falta iniciar sesión o usar el Admin SDK), que el .gitignore no cubre JSON de cuentas de servicio y que las solicitudes de prueba se acumulan.
+- Qué se usó / modificó / descartó: El integrante escribió el script. Decisiones propias: distancia y duración se estiman en línea recta por un factor de calles y una velocidad promedio, no con una ruta real; la recogida se crea a unos 800 m del conductor; la tarifa no se guarda en el viaje. Pendientes: un script para limpiar solicitudes de prueba y proteger credenciales en el .gitignore antes de descargar una cuenta de servicio.
+- Archivos y commit: tools/passenger/send-request.mjs, tools/passenger/estimate.mjs, package.json (script npm run request), README.md — 087b2ac
+- Verificación: Prueba en seco ejecutada por Claude; según el integrante, las solicitudes llegan a Firestore. (Completar: qué documento apareció en trips y cómo se comportó la app.)
+- Aprendizaje: (completar por el integrante)
+
+---
+
+### Entrada #22
+- Fecha: 2026-11-08
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Recibir solicitudes entrantes en tiempo real, con tarjeta, temporizador de 15 segundos, aceptar y rechazar.
+- Prompt: "dejare asi por hoy, revisa los cambios que hice y haz las entrdas a la bitacora" (antes, Claude había propuesto el orden de trabajo: viajes de prueba, hook useTripRequests, tarifa estimada, temporizador y botones)
+- Resumen de la respuesta: Claude revisó useTripRequests, useCountdown, trips.js, tripRequests.js, formatMoney, paymentMethods, IncomingRequestCard y los cambios de HomeScreen, y probó selectPendingRequests y formatMoney (orden por antigüedad, descarte de solicitudes de más de 2 minutos, createdAt nulo, límite de 2 minutos, 15.360 → $15.360). Observó que aceptar y rechazar usan una transacción de Firestore, que la cuenta regresiva se calcula contra una hora límite y no restando 1 por tick, y que useTripRequests devuelve error y queued que HomeScreen todavía no usa.
+- Qué se usó / modificó / descartó: El integrante escribió el código. Decisiones propias: las solicitudes con más de 2 minutos se ignoran; se atiende la más antigua y las demás esperan; al vencer el tiempo la solicitud pasa a rejected; la tarifa se calcula en la app con calculateFare y no se guarda en el viaje. Punto por revisar: si Aceptar falla justo cuando el tiempo ya llegó a cero, el temporizador no vuelve a disparar el rechazo automático.
+- Archivos y commit: src/hooks/useTripRequests.js, src/hooks/useCountdown.js, src/services/firebase/trips.js, src/utils/tripRequests.js, src/utils/formatMoney.js, src/constants/paymentMethods.js, src/components/trip/IncomingRequestCard.js, src/screens/Home/HomeScreen.js — cc6a507
+- Verificación: selectPendingRequests y formatMoney probadas con Node. (Completar: pruebas en iPhone con el simulador: llega la tarjeta, el temporizador baja de 15 a 0, Aceptar cambia el viaje a accepted con driverId, Rechazar y vencer el tiempo cambian a rejected, dos solicitudes seguidas y modo No disponible.)
+- Aprendizaje: (completar por el integrante: por qué se usa una transacción y por qué la cuenta regresiva usa una hora límite)
+
+---
+
+### Entrada #23
+- Fecha: 2026-11-09
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Revisar el viaje en curso hacia la recogida: TripContext, TripScreen, PickupCard, ruta con OSRM y los cambios de navegación.
+- Prompt: "Todo el día estuve ocupado haciendo unos archivos hice el trip contest, el use root initials, trip screen, pickup car, app.js, route navigator, driver navigator, home screen, trips. Realicé esto pues como intentando también poner el OSRM para simular pues también como tal en estos momentos como la ruta. Cuando se pide como tal un servicio, poder ir como simulando la trayectoria del punto A al punto B para ir a recoger al cliente. Verifícame pues como tal esos archivos. Realmente ya hice las pruebas, todo pasó bien, ya hice el commit pues como tal de estos archivos, pero igualmente revísame pues si hay de pronto cosas por mejorar para tenerlo en" (el mensaje quedó cortado) / "tienes razon, no trbaje app.js perdon" / "lo que paso es que no entro en el commit"
+- Resumen de la respuesta: Claude leyó osrm.js, useRoute, TripContext, trips.js, TripScreen, PickupCard y los cambios de RootNavigator y App.js. Probó parseOsrmRoute con respuestas de ejemplo (distancia y duración, mínimo de 1 minuto, rutas vacías, NoRoute y null) y hizo una consulta real a OSRM (Parque Lleras a Estadio: 200 en ~1 s, 8.919 m). Encontró que el commit fdc21be no arrancaba solo: RootNavigator ya usaba useActiveTrip pero App.js, con el TripProvider, había quedado sin commit; la causa fue agregar archivos por carpeta (git add src docs), que no incluye los archivos de la raíz. Propuso mejoras: marcar al conductor como no disponible durante el viaje, un tiempo límite para la consulta a OSRM, un botón de pasajero a bordo, un modo de simulación del trayecto solo para desarrollo y confirmar con la profesora si OSRM sustituye a Google Directions.
+- Qué se usó / modificó / descartó: El integrante escribió el código. Decisiones propias: OSRM como servicio de rutas en lugar de Google Directions (el PDF lo menciona como alternativa opcional); una sola consulta de ruta por tramo; línea recta de respaldo si OSRM falla; el viaje activo vive en Firestore para sobrevivir al cierre de la app. Aplicó la corrección de App.js y reescribió el commit (ahora 59aadeb) y puso al conductor como no disponible al aceptar y bloqueó aceptar un segundo viaje. Pendientes: tiempo límite en OSRM, simulación del trayecto y confirmar con la profesora el uso de OSRM.
+- Archivos y commit: src/context/TripContext.js, src/hooks/useRoute.js, src/services/maps/osrm.js, src/screens/Trip/TripScreen.js, src/components/trip/PickupCard.js, src/utils/initials.js, src/navigation/RootNavigator.js, src/navigation/DrawerNavigator.js, App.js — 59aadeb
+- Verificación: parseOsrmRoute y la consulta real a OSRM probadas por Claude. Según el integrante, el flujo se probó en el iPhone con el simulador de pasajero. (Completar el detalle de lo observado.)
+- Aprendizaje: (completar por el integrante: por qué git add src no incluye App.js y cómo comprobar qué quedó en el commit)
+
+---
+
+### Entrada #24
+- Fecha: 2026-11-09
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Cerrar la fase 5: pasajero a bordo, ruta hacia el destino y finalización del viaje.
+- Prompt: "estoy trabajando para darle cierre a la fase 5, teneindo en cuenta el pasajero estando abordo, la ruta del destino y la finalizacion del viaje" / "vale, perfecto, hare esos cambias, lo que me pides como tal es tener la informacion exacta del cobro de la carrera, no que viva en la base de datos sino que el conductor se entere" / "vale, esto va en la fase 6"
+- Resumen de la respuesta: Claude revisó los cambios sin commit de trips.js, TripScreen, PickupCard, DestinationCard y HomeScreen: pickUpPassenger pasa a in_progress, el mapa cambia al tramo hacia el destino con una consulta de ruta por tramo, y completeTrip guarda fare, commission, driverEarnings, commissionRate y completedAt solo desde in_progress. Señaló un hueco de diseño: ACTIVE_STATUSES no incluye completed, así que al finalizar el conductor vuelve al mapa sin ver el resumen de cobro ni poder marcar el efectivo como recibido, y el viaje en completed nunca llega a paid. Recomendó una pantalla mínima de resumen con tarifa, comisión, ganancia neta, propina y estado del pago, y un botón de cobro recibido para efectivo, dejando Mercado Pago real para la fase 6.
+- Qué se usó / modificó / descartó: El integrante escribió el código. Decisiones propias: la tarifa final se calcula con la distancia y la duración de la solicitud aceptada (lo que el conductor vio es lo que cobra); finalizar no exige estar cerca del destino. Decisión del integrante: la pantalla de resumen y el cobro pasan a la fase 6, a pesar de la recomendación de incluir una versión mínima en la fase 5. Pendiente: sin esa pantalla, un viaje finalizado queda en completed y el conductor no lo ve.
+- Archivos y commit: src/services/firebase/trips.js, src/screens/Trip/TripScreen.js, src/components/trip/PickupCard.js, src/components/trip/DestinationCard.js, src/screens/Home/HomeScreen.js — (pendiente de commit)
+- Verificación: Revisión del código por Claude. (Completar: prueba en el iPhone con el simulador: aceptar, pasajero a bordo, ruta al destino y finalizar; qué quedó guardado en trips.)
+- Aprendizaje: (completar por el integrante: por qué se usa una transacción para cambiar el estado y qué guarda completeTrip)
+
+---
+
+### Entrada #25
+- Fecha: 2026-11-09
+- Integrante: Samuel Gómez
+- Herramienta: Claude Code (Claude Sonnet 5.5)
+- Objetivo: Corregir una observación de la profesora: los campos del registro dejaban escribir más caracteres de los permitidos (por ejemplo, la cédula aceptaba más de 10 dígitos aunque el validador marcaba el error).
+- Prompt: "Me acordé de algo importante, ayúdame a realizar eso. La profesora me dijo cuando estaba pues como probando la aplicación de que yo podía seguir escribiendo más dígitos en el registro pues de datos personales y de vehículos. Por ejemplo, la cédula solo permite 10 números, pero cuando escribía más de 10 podía seguir escribiendo. Obviamente el validador estaba malo y salía un error, pero en el teclado uno podía seguir escribiendo más de 10 dígitos. Ayúdame a corregir esto, dime en qué parte del código me meto para corregirlo, para cambiar eso, por" (el mensaje quedó cortado) / "listo, ya lo hice" / "listo, los commits los hago despues" / "pero ya hice esos cambios mi hermano" / "listo, borrado y comprobadooooo"
+- Resumen de la respuesta: Claude revisó todos los campos de texto de las tres pestañas del registro y listó cuáles tenían maxLength y cuáles no. FormField ya pasa sus propiedades al TextInput, por lo que bastaba agregar maxLength en cada campo. Faltaban nombre (50), documento (10), celular (10), marca (30) y modelo (30). En revisiones sucesivas verificó el estado real del archivo y encontró un error de Claude (una comprobación automática marcó OK el documento por un falso positivo) y errores del código (marca y modelo con 50 en lugar de 30, y un maxLength de más dentro del selector de idioma).
+- Qué se usó / modificó / descartó: El integrante agregó maxLength en los cinco campos y borró el que sobraba en el selector de idioma. Se mantuvo el validador como segunda defensa (maxLength impide escribir de más, pero no garantiza el mínimo). Pendientes: usar constantes compartidas entre validadores y pantallas, y probar el caso de pegar texto con espacios en el celular.
+- Archivos y commit: src/screens/Register/PersonalDataScreen.js, src/screens/Register/VehicleScreen.js — (pendiente de commit)
+- Verificación: Revisión del código por Claude en tres pasadas. Según el integrante, se comprobó en el iPhone escribiendo de más en cada campo. (Completar el detalle de lo observado.)
+- Aprendizaje: (completar por el integrante: por qué maxLength y el validador se complementan y no se reemplazan)

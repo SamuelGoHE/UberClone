@@ -101,6 +101,21 @@ docs/AI_LOG.md   bitácora de uso de IA
 
 `src/utils/calculateFare.js` recibe `{ distanceKm, durationMin, category, tip }` y devuelve `{ fare, commission, driverEarnings }`, en pesos colombianos enteros, con una comisión del 20 % configurable en `src/config/pricing.js`. Con el ejemplo del enunciado (8,5 km y 22 min) da 19.200 COP en Económico y 26.900 COP en XL.
 
+## Simulador de pasajero
+
+Esta app es solo la del conductor, así que no existe quien pida los viajes. El script `tools/passenger/send-request.mjs` hace de pasajero: crea una solicitud en la colección `trips` de Firestore dirigida al conductor que esté **disponible**, con una distancia y una duración estimadas.
+
+```bash
+npm run request                                          # solicitud al azar
+npm run request -- --category xl --payment cash --tip 2000
+npm run request -- --dest 3                              # destino número 3 de la lista
+npm run request -- --dry-run                             # muestra la solicitud sin guardarla
+```
+
+Cada solicitud guarda `status: "requested"`, `candidateDriverId`, el origen y el destino (`lat`, `lng`, `address`), `distanceKm`, `durationMin`, `category`, `paymentMethod` y `tip`. La tarifa, la comisión y la ganancia no se guardan en la solicitud: las calcula la app con `calculateFare`.
+
+La distancia y la duración de cada solicitud son una **estimación local** (`tools/passenger/estimate.mjs`: línea recta por un factor de calles y una velocidad promedio de ciudad); la ruta real del viaje se calcula en otro paso.
+
 ## Uso de IA
 
 Se usó **Claude Code** (asistente de programación de Anthropic) durante el desarrollo, y cada uso está registrado en la bitácora: [docs/AI_LOG.md](docs/AI_LOG.md).

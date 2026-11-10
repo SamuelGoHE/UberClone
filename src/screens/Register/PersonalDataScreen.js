@@ -59,13 +59,14 @@ export default function PersonalDataScreen() {
           <FormField
             label="Nombre completo"
             placeholder="Como aparece en tu documento"
+            maxLength={50}
             autoCapitalize="words"
             autoComplete="name"
             textContentType="name"
             {...textProps('fullName')}
           />
-          <FormField label="Documento de identidad" placeholder="6 a 10 dígitos" {...digitsProps('document')} />
-          <FormField label="Número de celular" placeholder="10 dígitos" {...digitsProps('phone')} />
+          <FormField label="Documento de identidad" placeholder="6 a 10 dígitos" maxLength={10} {...digitsProps('document')} />
+          <FormField label="Número de celular" placeholder="10 dígitos" maxLength={10} {...digitsProps('phone')} />
 
           <DateField
             label="Fecha de nacimiento"
@@ -93,6 +94,7 @@ export default function PersonalDataScreen() {
             label="Idioma"
             value={personal.language}
             options={LANGUAGE_OPTIONS}
+
             onChange={(next) => setPersonalField('language', next)}
           />
 

@@ -70,10 +70,10 @@ export default function VehicleScreen() {
 
           <View style={styles.row}>
             <View style={styles.half}>
-              <FormField label="Marca" placeholder="Chevrolet" {...textProps('brand')} />
+              <FormField label="Marca" placeholder="Chevrolet" maxLength={30} {...textProps('brand')} />
             </View>
             <View style={styles.half}>
-              <FormField label="Modelo" placeholder="Spark GT" {...textProps('model')} />
+              <FormField label="Modelo" placeholder="Spark GT" maxLength={30} {...textProps('model')} />
             </View>
           </View>
 
