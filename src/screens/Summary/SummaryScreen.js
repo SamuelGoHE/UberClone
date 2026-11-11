@@ -1,30 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PAYMENT_LABELS, PAYMENT_STATUS, PAYMENT_STATUS_LABELS } from '../../constants/paymentMethods';
+import {
+  PAYMENT_LABELS,
+  PAYMENT_METHODS,
+  PAYMENT_STATUS,
+  PAYMENT_STATUS_LABELS,
+} from '../../constants/paymentMethods';
 import { useActiveTrip } from '../../context/TripContext';
 import { markTripPaid, switchToCash } from '../../services/firebase/trips';
+import { createPayment, PaymentsError, refreshPayment } from '../../services/payments';
 import { formatMoney } from '../../utils/formatMoney';
 import { getPaymentVariant } from '../../utils/paymentVariant';
 import { colors, radius, spacing, typography } from '../../theme/colors';
 
 // CONCEPTO: las cuatro variantes del resumen son datos, no cuatro pantallas. Cada una dice qué color, textos y
-// botón le corresponden; la pantalla es la misma. El botón principal siempre cierra el cobro (markTripPaid)
-// o pasa a efectivo (switchToCash). "Actualizar estado" y "Reintentar cobro" llegan con el backend de pagos.
+// botones le corresponden; la pantalla es la misma. Cada botón tiene un id que apunta a una acción (handlers).
+// El primero de actions es el botón principal; link es un texto pequeño de apoyo.
 const VARIANTS = {
   [PAYMENT_STATUS.APPROVED]: {
     color: colors.success,
     icon: 'check',
     title: 'Pago aprobado',
     message: 'El pasajero pagó con Mercado Pago.',
-    action: 'Listo',
+    actions: [{ id: 'markPaid', label: 'Listo' }],
   },
   [PAYMENT_STATUS.PENDING]: {
     color: colors.warning,
     icon: 'clock',
     title: 'Pago pendiente',
     message: 'Esperando la confirmación de Mercado Pago…',
-    action: 'Cobrar en efectivo',
+    actions: [
+      { id: 'refresh', label: 'Actualizar estado' },
+      { id: 'cash', label: 'Cobrar en efectivo' },
+    ],
+    link: { id: 'checkout', label: 'Abrir el pago de nuevo' },
   },
   [PAYMENT_STATUS.REJECTED]: {
     color: colors.danger,
@@ -32,16 +43,22 @@ const VARIANTS = {
     title: 'Pago rechazado',
     message: 'La tarjeta del pasajero fue rechazada.',
     notice: 'Pide al pasajero otro medio de pago o cobra en efectivo.',
-    action: 'Cobrar en efectivo',
+    actions: [
+      { id: 'checkout', label: 'Reintentar cobro' },
+      { id: 'cash', label: 'Cobrar en efectivo' },
+    ],
   },
   [PAYMENT_STATUS.CASH]: {
     color: colors.cash,
     icon: 'cash',
     title: 'Cobro en efectivo',
     message: 'Cobra la tarifa al pasajero en mano.',
-    action: 'Marcar cobro recibido',
+    actions: [{ id: 'markPaid', label: 'Marcar cobro recibido' }],
   },
 };
+
+const ALREADY_PAID_HINT = 'El pasajero ya pagó con Mercado Pago, no hace falta cobrar en efectivo.';
+const STILL_PENDING_HINT = 'Todavía no vemos el pago. Si ya pagaste, espera unos segundos y toca Actualizar estado.';
 
 // Ícono dentro del círculo de color, dibujado con Views y texto (la app no usa librería de íconos).
 function StatusIcon({ icon, color }) {
@@ -71,31 +88,75 @@ function Row({ label, value, strong }) {
 
 // Resumen del cobro. RootNavigator lo muestra mientras el viaje está en "completed" (terminado y por cobrar).
 // Cuando el conductor lo cierra, el viaje pasa a "paid", deja de estar abierto y se vuelve al Inicio.
+// En un viaje de Mercado Pago, la app le pide el cobro al backend, abre el checkout (donde el pasajero paga con
+// su tarjeta) y, al cerrarlo, consulta el resultado. El backend lo escribe en el viaje y esta pantalla, que lo
+// escucha en tiempo real, cambia sola de variante.
 export default function SummaryScreen() {
   const { activeTrip: trip } = useActiveTrip();
   const insets = useSafeAreaInsets();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [hint, setHint] = useState(null);
+  const autoStarted = useRef(false);
 
-  if (!trip) return null;
+  const tripId = trip?.id;
+  const variant = trip ? getPaymentVariant(trip) : null;
 
-  const variant = getPaymentVariant(trip);
-  const view = VARIANTS[variant];
-  // Efectivo y Listo cierran el cobro; en pendiente o rechazado el botón cambia a cobro en efectivo.
-  const closesTrip = variant === PAYMENT_STATUS.CASH || variant === PAYMENT_STATUS.APPROVED;
-  const commissionPercent = Math.round((trip.commissionRate ?? 0) * 100);
+  // Consulta el resultado del pago; si todavía no hay pago, avisa en lugar de dejar al conductor sin respuesta.
+  const refresh = async () => {
+    const result = await refreshPayment(tripId);
+    if (result.paymentStatus === PAYMENT_STATUS.PENDING) setHint(STILL_PENDING_HINT);
+  };
 
-  const handleAction = async () => {
+  // Pide el cobro al backend, abre el checkout y, cuando el navegador se cierra, consulta el resultado.
+  const checkout = async () => {
+    const { url } = await createPayment(tripId);
+    await WebBrowser.openBrowserAsync(url);
+    await refresh();
+  };
+
+  const handlers = {
+    markPaid: () => markTripPaid(tripId),
+    // Antes de pasar a efectivo se consulta el pago: si el pasajero ya pagó en el checkout y la app todavía no lo
+    // sabía, el cambio se rechaza y no se le cobra dos veces. Si el backend no responde, igual se puede cobrar.
+    cash: async () => {
+      if (trip.paymentPreferenceId) await refreshPayment(tripId).catch(() => {});
+      if (!(await switchToCash(tripId))) setHint(ALREADY_PAID_HINT);
+    },
+    refresh,
+    checkout,
+  };
+
+  const run = async (id) => {
     setBusy(true);
     setError(null);
+    setHint(null);
     try {
-      await (closesTrip ? markTripPaid(trip.id) : switchToCash(trip.id));
-    } catch {
-      setError('No pudimos guardar el cobro. Inténtalo de nuevo.');
+      await handlers[id]();
+    } catch (caught) {
+      setError(caught instanceof PaymentsError ? caught.message : 'No pudimos completar la acción. Inténtalo de nuevo.');
     }
     setBusy(false);
   };
 
+  // Un viaje de Mercado Pago que todavía no tiene cobro creado abre el checkout solo, en cuanto aparece el resumen.
+  // Si el backend estaba apagado y falló, "Abrir el pago de nuevo" lo reintenta.
+  const needsCheckout =
+    Boolean(trip) &&
+    trip.paymentMethod === PAYMENT_METHODS.MERCADO_PAGO &&
+    !trip.paymentPreferenceId &&
+    variant === PAYMENT_STATUS.PENDING;
+  useEffect(() => {
+    if (needsCheckout && !autoStarted.current) {
+      autoStarted.current = true;
+      run('checkout');
+    }
+  }, [needsCheckout]);
+
+  if (!trip) return null;
+
+  const view = VARIANTS[variant];
+  const commissionPercent = Math.round((trip.commissionRate ?? 0) * 100);
   const notice =
     variant === PAYMENT_STATUS.CASH
       ? `La plataforma no recibió este dinero: la comisión de ${formatMoney(trip.commission)} se descontará de tu saldo.`
@@ -136,19 +197,38 @@ export default function SummaryScreen() {
             <Text style={styles.noticeText}>{notice}</Text>
           </View>
         ) : null}
+        {hint ? (
+          <View style={[styles.notice, { backgroundColor: `${colors.warning}1F` }]}>
+            <Text style={styles.noticeText}>{hint}</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Pressable
-          style={[styles.button, busy && styles.disabled]}
-          onPress={handleAction}
-          disabled={busy}
-          accessibilityRole="button"
-          accessibilityLabel={view.action}
-        >
-          <Text style={styles.buttonText}>{view.action}</Text>
-        </Pressable>
+        {view.actions.map((action, index) => (
+          <Pressable
+            key={action.id}
+            style={[styles.button, index === 0 ? styles.primary : styles.secondary, busy && styles.disabled]}
+            onPress={() => run(action.id)}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={action.label}
+          >
+            <Text style={index === 0 ? styles.primaryText : styles.secondaryText}>{action.label}</Text>
+          </Pressable>
+        ))}
+        {view.link ? (
+          <Pressable
+            style={[styles.link, busy && styles.disabled]}
+            onPress={() => run(view.link.id)}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={view.link.label}
+          >
+            <Text style={styles.linkText}>{view.link.label}</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -186,7 +266,12 @@ const styles = StyleSheet.create({
   noticeText: { ...typography.caption, color: colors.text },
   footer: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.sm, backgroundColor: colors.background },
   error: { ...typography.caption, color: colors.danger },
-  button: { height: 56, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+  button: { height: 56, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  primary: { backgroundColor: colors.primary },
+  secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   disabled: { opacity: 0.5 },
-  buttonText: { ...typography.bodyStrong, color: colors.onPrimary },
+  primaryText: { ...typography.bodyStrong, color: colors.onPrimary },
+  secondaryText: { ...typography.bodyStrong, color: colors.text },
+  link: { alignItems: 'center', justifyContent: 'center', height: 36 },
+  linkText: { ...typography.caption, color: colors.textMuted, textDecorationLine: 'underline' },
 });

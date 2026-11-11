@@ -122,13 +122,14 @@ export function markTripPaid(tripId) {
 }
 
 // Si el pago con Mercado Pago está pendiente o fue rechazado, el conductor puede cobrar en efectivo: el método
-// pasa a efectivo y el resumen cambia solo a esa variante.
+// pasa a efectivo y el resumen cambia solo a esa variante. Si el pago ya está aprobado no se permite, para no
+// cobrarle dos veces al pasajero.
 export function switchToCash(tripId) {
   return moveTrip(
     tripId,
     [TRIP_STATUS.COMPLETED],
     { paymentMethod: PAYMENT_METHODS.CASH, paymentStatus: PAYMENT_STATUS.CASH },
-    (trip) => trip.paymentMethod !== PAYMENT_METHODS.CASH,
+    (trip) => trip.paymentMethod !== PAYMENT_METHODS.CASH && trip.paymentStatus !== PAYMENT_STATUS.APPROVED,
   );
 }
 
