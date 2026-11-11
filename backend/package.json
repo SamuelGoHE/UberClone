@@ -1,0 +1,18 @@
+{
+  "name": "uberclone-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend de pagos de UberClone Conductor: crea el cobro en Mercado Pago (modo de prueba) y actualiza el viaje en Firestore.",
+  "scripts": {
+    "start": "node --env-file=.env src/server.js",
+    "dev": "node --env-file=.env --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "firebase-admin": "^14.5.0"
+  }
+}

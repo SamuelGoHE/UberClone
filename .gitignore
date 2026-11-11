@@ -47,3 +47,7 @@ backend/node_modules/
 
 # editor
 .vscode/
+
+# Clave de servicio de Firebase Admin: en cualquier carpeta, nunca se sube
+serviceAccount*.json
+*-firebase-adminsdk-*.json
