@@ -16,3 +16,16 @@ export function toISODate(date) {
   const day = String(date.getDate()).padStart(2, '0');
   return `${date.getFullYear()}-${month}-${day}`;
 }
+
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+// Fecha y hora cortas de un viaje, a partir de milisegundos: "08 nov · 14:32". Se arma a mano (y no con
+// toLocaleString) para que se vea igual en cualquier celular. Devuelve '' si no hay fecha.
+export function formatDateTime(ms) {
+  if (typeof ms !== 'number') return '';
+  const date = new Date(ms);
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${day} ${MONTHS[date.getMonth()]} · ${hours}:${minutes}`;
+}

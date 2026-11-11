@@ -1,4 +1,17 @@
-import { collection, doc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, where } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDocs,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  runTransaction,
+  serverTimestamp,
+  startAfter,
+  Timestamp,
+  where,
+} from 'firebase/firestore';
 import { PAYMENT_METHODS, PAYMENT_STATUS } from '../../constants/paymentMethods';
 import { TRIP_STATUS } from '../../constants/tripStatus';
 import { db } from './index';
@@ -49,6 +62,39 @@ export function subscribeToDriverTrips(uid, onData, onError) {
     (snapshot) => onData(snapshot.docs.map(toTrip).sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0))),
     onError,
   );
+}
+
+// Cuántos viajes trae cada página del Historial (el enunciado sugiere 20).
+export const HISTORY_PAGE_SIZE = 20;
+
+// CONCEPTO: paginación con cursor. En vez de traer todos los viajes, se piden de 20 en 20: la primera página sin
+// cursor y las siguientes con startAfter(cursor), que continúa justo después del último documento recibido.
+// El cursor es el DOCUMENTO y no solo su fecha: si dos viajes terminaron en el mismo instante, la fecha sola
+// podría saltarse uno o repetirlo.
+//   uid           conductor dueño de los viajes
+//   fromMs, toMs  rango de completedAt (toMs NO inclusivo); null = sin límite
+//   paymentMethod 'cash' | 'mercadopago' | null (todos)
+// Ordena por completedAt (del más reciente al más antiguo). Efecto buscado: un viaje cancelado no tiene
+// completedAt y Firestore deja fuera de una consulta ordenada los documentos sin ese campo, así que el
+// Historial solo muestra viajes que se hicieron (completed y paid). Si algún día un cancelado trajera
+// completedAt, aparecería aquí sin avisar. Los completed sin cobrar sí salen, con su estado de pago.
+// Necesita dos índices compuestos: driverId + completedAt, y driverId + paymentMethod + completedAt.
+// Devuelve { trips, cursor, hasMore }: hasMore es false cuando la página vino incompleta (no quedan más).
+export async function fetchTripHistoryPage(uid, { fromMs = null, toMs = null, paymentMethod = null, cursor = null }) {
+  const constraints = [where('driverId', '==', uid)];
+  if (paymentMethod) constraints.push(where('paymentMethod', '==', paymentMethod));
+  if (fromMs !== null) constraints.push(where('completedAt', '>=', Timestamp.fromMillis(fromMs)));
+  if (toMs !== null) constraints.push(where('completedAt', '<', Timestamp.fromMillis(toMs)));
+  constraints.push(orderBy('completedAt', 'desc'));
+  if (cursor) constraints.push(startAfter(cursor));
+  constraints.push(limit(HISTORY_PAGE_SIZE));
+
+  const snapshot = await getDocs(query(collection(db, 'trips'), ...constraints));
+  return {
+    trips: snapshot.docs.map(toTrip),
+    cursor: snapshot.docs[snapshot.docs.length - 1] ?? cursor,
+    hasMore: snapshot.size === HISTORY_PAGE_SIZE,
+  };
 }
 
 const activeTripsQuery = (uid) =>

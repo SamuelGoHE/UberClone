@@ -8,6 +8,7 @@ import {
   PAYMENT_STATUS,
   PAYMENT_STATUS_LABELS,
 } from '../../constants/paymentMethods';
+import ClockIcon from '../../components/common/ClockIcon';
 import { useActiveTrip } from '../../context/TripContext';
 import { markTripPaid, switchToCash } from '../../services/firebase/trips';
 import { createPayment, PaymentsError, refreshPayment } from '../../services/payments';
@@ -67,12 +68,7 @@ function StatusIcon({ icon, color }) {
       {icon === 'check' ? <Text style={[styles.glyph, { color }]}>✓</Text> : null}
       {icon === 'cross' ? <Text style={[styles.glyph, { color }]}>✕</Text> : null}
       {icon === 'cash' ? <Text style={[styles.glyph, { color }]}>$</Text> : null}
-      {icon === 'clock' ? (
-        <View style={[styles.clock, { borderColor: color }]}>
-          <View style={[styles.clockHandLong, { backgroundColor: color }]} />
-          <View style={[styles.clockHandShort, { backgroundColor: color }]} />
-        </View>
-      ) : null}
+      {icon === 'clock' ? <ClockIcon color={color} /> : null}
     </View>
   );
 }
@@ -241,9 +237,6 @@ const styles = StyleSheet.create({
   status: { alignItems: 'center', gap: spacing.xs, paddingTop: spacing.md },
   iconCircle: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   glyph: { fontSize: 28, lineHeight: 32, fontWeight: '700' },
-  clock: { width: 28, height: 28, borderRadius: 14, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
-  clockHandLong: { position: 'absolute', width: 2.5, height: 9, top: 3, borderRadius: 1 },
-  clockHandShort: { position: 'absolute', width: 7, height: 2.5, left: 12, top: 12, borderRadius: 1 },
   statusTitle: { ...typography.heading, color: colors.text },
   statusMessage: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
   earnings: { alignItems: 'center', gap: 2 },
