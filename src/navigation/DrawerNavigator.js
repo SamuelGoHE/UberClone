@@ -5,6 +5,7 @@ import {
   DrawerItem,
   DrawerItemList,
 } from '@react-navigation/drawer';
+import EarningsScreen from '../screens/Earnings/EarningsScreen';
 import HomeScreen from '../screens/Home/HomeScreen';
 import { CATEGORY_OPTIONS } from '../constants/registration';
 import { useAuth } from '../context/AuthContext';
@@ -51,8 +52,8 @@ function DrawerContent(props) {
 }
 
 // CONCEPTO: el Drawer es el menú lateral del conductor. Inicio oculta la cabecera porque dibuja su propio
-// botón de menú flotando sobre el mapa. Hoy solo tiene Inicio; Ganancias, Historial y
-// Perfil se agregan como pantallas nuevas cuando existan. El deslizamiento desde el borde queda
+// botón de menú flotando sobre el mapa. Hoy tiene Inicio y Ganancias; Historial y Perfil se agregan como
+// pantallas nuevas cuando existan. El deslizamiento desde el borde queda
 // desactivado: choca con el gesto del sistema y de Expo Go. El menú se abre solo con un botón.
 export default function DrawerNavigator() {
   return (
@@ -70,10 +71,12 @@ export default function DrawerNavigator() {
         headerStyle: { backgroundColor: colors.background },
         headerTitleStyle: { ...typography.heading, color: colors.text },
         headerShadowVisible: false,
+        headerTitleAlign: 'left',
         headerTintColor: colors.text,
       }}
     >
       <Drawer.Screen name="Home" component={HomeScreen} options={{ title: 'Inicio', drawerLabel: 'Inicio', headerShown: false }} />
+      <Drawer.Screen name="Earnings" component={EarningsScreen} options={{ title: 'Ganancias', drawerLabel: 'Ganancias' }} />
     </Drawer.Navigator>
   );
 }

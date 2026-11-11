@@ -16,10 +16,18 @@ export const ACTIVE_STATUSES = [
 // CONCEPTO: el viaje es un documento en trips/{id} y su campo status dice en qué paso va. El pasajero
 // (hoy el simulador) y el conductor no se hablan: los dos leen y escriben ese mismo documento.
 
-// createdAt llega como Timestamp de Firestore (o null un instante, mientras el servidor lo escribe).
+// Las fechas llegan como Timestamp de Firestore (o null un instante, mientras el servidor las escribe). Se
+// agregan también en milisegundos (createdAtMs, completedAtMs, paidAtMs), que son más fáciles de comparar.
+const toMs = (timestamp) => timestamp?.toMillis?.() ?? null;
 const toTrip = (tripDoc) => {
   const data = tripDoc.data();
-  return { id: tripDoc.id, ...data, createdAtMs: data.createdAt?.toMillis?.() ?? null };
+  return {
+    id: tripDoc.id,
+    ...data,
+    createdAtMs: toMs(data.createdAt),
+    completedAtMs: toMs(data.completedAt),
+    paidAtMs: toMs(data.paidAt),
+  };
 };
 
 // Las solicitudes que se le ofrecen a este conductor: viajes en estado "requested" cuyo candidateDriverId
@@ -31,6 +39,16 @@ export function subscribeToTripRequests(uid, onData, onError) {
     where('status', '==', TRIP_STATUS.REQUESTED),
   );
   return onSnapshot(requests, (snapshot) => onData(snapshot.docs.map(toTrip)), onError);
+}
+
+// Todos los viajes de este conductor, del más reciente al más antiguo. Un solo filtro de igualdad no necesita
+// índice; el orden se hace aquí. Lo usan Ganancias (los cobrados) e Historial (los cerrados).
+export function subscribeToDriverTrips(uid, onData, onError) {
+  return onSnapshot(
+    query(collection(db, 'trips'), where('driverId', '==', uid)),
+    (snapshot) => onData(snapshot.docs.map(toTrip).sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0))),
+    onError,
+  );
 }
 
 const activeTripsQuery = (uid) =>
