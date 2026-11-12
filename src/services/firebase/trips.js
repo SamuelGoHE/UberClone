@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   limit,
   onSnapshot,
@@ -10,6 +11,7 @@ import {
   serverTimestamp,
   startAfter,
   Timestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { PAYMENT_METHODS, PAYMENT_STATUS } from '../../constants/paymentMethods';
@@ -62,6 +64,19 @@ export function subscribeToDriverTrips(uid, onData, onError) {
     (snapshot) => onData(snapshot.docs.map(toTrip).sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0))),
     onError,
   );
+}
+
+// Un solo viaje por su id (para el detalle del Historial), o null si no existe.
+export async function fetchTrip(tripId) {
+  const snapshot = await getDoc(doc(db, 'trips', tripId));
+  return snapshot.exists() ? toTrip(snapshot) : null;
+}
+
+// Guarda en el viaje la ruta recorrida (ya reducida, ver utils/route.js) para dibujarla después en el detalle del
+// Historial sin volver a pedirla a OSRM: el enunciado pide dibujar "la ruta guardada" con Polyline y cuidar las
+// consultas. Es una escritura simple, no un cambio de estado.
+export function saveTripRoute(tripId, route) {
+  return updateDoc(doc(db, 'trips', tripId), { route });
 }
 
 // Cuántos viajes trae cada página del Historial (el enunciado sugiere 20).

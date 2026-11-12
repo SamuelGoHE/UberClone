@@ -24,7 +24,7 @@ const METHOD_CHIPS = [
 
 // Historial de carreras: los viajes del conductor, del más reciente al más antiguo, con filtros de periodo y de
 // método de pago. La lista se pide de 20 en 20 (useTripHistory) y pide la página siguiente al llegar al final.
-export default function HistoryScreen() {
+export default function HistoryScreen({ navigation }) {
   const { user } = useAuth();
   const [period, setPeriod] = useState(HISTORY_PERIODS.WEEK);
   const [paymentMethod, setPaymentMethod] = useState(null);
@@ -92,7 +92,9 @@ export default function HistoryScreen() {
       <FlatList
         data={history.trips}
         keyExtractor={(trip) => trip.id}
-        renderItem={({ item }) => <TripCard trip={item} />}
+        renderItem={({ item }) => (
+          <TripCard trip={item} onPress={() => navigation.navigate('TripDetail', { tripId: item.id })} />
+        )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={<View style={styles.empty}>{empty}</View>}
         ListFooterComponent={history.loadingMore ? <ActivityIndicator style={styles.footer} color={colors.primary} /> : null}

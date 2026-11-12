@@ -10,9 +10,16 @@ import { useAuth } from '../../context/AuthContext';
 import useDriverLocation from '../../hooks/useDriverLocation';
 import useRoute from '../../hooks/useRoute';
 import { updateDriverLocation } from '../../services/firebase/locations';
-import { cancelTrip, completeTrip, pickUpPassenger, startDriverArriving } from '../../services/firebase/trips';
+import {
+  cancelTrip,
+  completeTrip,
+  pickUpPassenger,
+  saveTripRoute,
+  startDriverArriving,
+} from '../../services/firebase/trips';
 import { TRIP_STATUS } from '../../constants/tripStatus';
 import { calculateFare } from '../../utils/calculateFare';
+import { reduceRoute } from '../../utils/route';
 import { colors, radius, spacing, typography } from '../../theme/colors';
 
 // Centro de Medellín: el mapa abre aquí mientras llega la ubicación real del conductor.
@@ -80,6 +87,16 @@ export default function TripScreen() {
       { latitude: target.lat, longitude: target.lng },
     ];
   }
+
+  // La ruta del tramo con el pasajero a bordo (recogida -> destino) es la que se hizo en el viaje: se guarda una vez,
+  // reducida, para dibujarla luego en el detalle del Historial. Si la escritura falla no pasa nada grave: el
+  // detalle la pedirá a OSRM como respaldo.
+  const routeSaved = useRef(false);
+  useEffect(() => {
+    if (!boarded || !route || trip?.route || routeSaved.current) return;
+    routeSaved.current = true;
+    saveTripRoute(tripId, reduceRoute(route.coordinates)).catch(() => {});
+  }, [boarded, route, trip, tripId]);
 
   // Cuando la ruta de un tramo llega, el mapa la encuadra una vez (no en cada movimiento del GPS).
   useEffect(() => {

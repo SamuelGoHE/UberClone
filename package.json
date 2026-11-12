@@ -31,7 +31,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "request": "node --env-file=.env tools/passenger/send-request.mjs",
-    "seed:history": "node --env-file=.env tools/seed-history.mjs"
+    "seed:history": "node --env-file=.env tools/seed-history.mjs",
+    "rate": "node --env-file=.env tools/passenger/rate-trip.mjs"
   },
   "private": true
 }
