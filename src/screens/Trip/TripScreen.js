@@ -10,9 +10,16 @@ import { useAuth } from '../../context/AuthContext';
 import useDriverLocation from '../../hooks/useDriverLocation';
 import useRoute from '../../hooks/useRoute';
 import { updateDriverLocation } from '../../services/firebase/locations';
-import { cancelTrip, completeTrip, pickUpPassenger, startDriverArriving } from '../../services/firebase/trips';
+import {
+  cancelTrip,
+  completeTrip,
+  pickUpPassenger,
+  saveTripRoute,
+  startDriverArriving,
+} from '../../services/firebase/trips';
 import { TRIP_STATUS } from '../../constants/tripStatus';
 import { calculateFare } from '../../utils/calculateFare';
+import { reduceRoute } from '../../utils/route';
 import { colors, radius, spacing, typography } from '../../theme/colors';
 
 // Centro de Medellín: el mapa abre aquí mientras llega la ubicación real del conductor.
@@ -25,7 +32,7 @@ const MAP_PADDING = { top: 140, right: 60, bottom: 380, left: 60 };
 // CONCEPTO: el campo status del viaje decide qué se ve, sin navegar a mano:
 //   accepted / driver_arriving -> "Hacia la recogida": ruta desde el conductor hasta el pasajero.
 //   in_progress                -> "Hacia el destino": ruta desde la recogida hasta el destino.
-// Al finalizar, el viaje pasa a "completed", deja de estar activo y RootNavigator vuelve al Inicio.
+// Al finalizar, el viaje pasa a "completed" y RootNavigator muestra el resumen del cobro (SummaryScreen).
 export default function TripScreen() {
   const { activeTrip: trip } = useActiveTrip();
   const { user } = useAuth();
@@ -81,6 +88,16 @@ export default function TripScreen() {
     ];
   }
 
+  // La ruta del tramo con el pasajero a bordo (recogida -> destino) es la que se hizo en el viaje: se guarda una vez,
+  // reducida, para dibujarla luego en el detalle del Historial. Si la escritura falla no pasa nada grave: el
+  // detalle la pedirá a OSRM como respaldo.
+  const routeSaved = useRef(false);
+  useEffect(() => {
+    if (!boarded || !route || trip?.route || routeSaved.current) return;
+    routeSaved.current = true;
+    saveTripRoute(tripId, reduceRoute(route.coordinates)).catch(() => {});
+  }, [boarded, route, trip, tripId]);
+
   // Cuando la ruta de un tramo llega, el mapa la encuadra una vez (no en cada movimiento del GPS).
   useEffect(() => {
     if (line && mapRef.current) mapRef.current.fitToCoordinates(line, { edgePadding: MAP_PADDING, animated: true });
@@ -104,7 +121,12 @@ export default function TripScreen() {
     run(() => pickUpPassenger(tripId), 'No pudimos registrar que el pasajero subió. Inténtalo de nuevo.');
   const handleFinish = () =>
     run(
-      () => completeTrip(tripId, { ...estimate, commissionRate: PRICING.commissionRate }),
+      () =>
+        completeTrip(tripId, {
+          ...estimate,
+          commissionRate: PRICING.commissionRate,
+          paymentMethod: trip.paymentMethod,
+        }),
       'No pudimos finalizar el viaje. Inténtalo de nuevo.',
     );
   const handleCancel = () =>

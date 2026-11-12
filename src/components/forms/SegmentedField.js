@@ -1,12 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/colors';
 
-// CONCEPTO: control segmentado, para escoger una opción entre pocas (como Español / English).
+// CONCEPTO: control segmentado, para escoger una opción entre pocas (como Español / English o Hoy / Semana / Mes).
+// El label es opcional: sin él, solo se dibuja el control.
 // Controlado como los demás selectores: value viene de la pantalla y onChange avisa el cambio.
 export default function SegmentedField({ label, value, options, onChange }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={styles.track}>
         {options.map((option) => {
           const selected = option.value === value;

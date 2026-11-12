@@ -23,7 +23,8 @@ function expiryLimits() {
 }
 
 // CONCEPTO: campo de fecha controlado, igual que SelectField. kind='birth' (por defecto) es para fechas
-// pasadas, como el nacimiento; kind='expiry' es para vencimientos, que deben ser futuros. value es un Date (o null) y el componente
+// pasadas, como el nacimiento; kind='expiry' es para vencimientos, que deben ser futuros; kind='range' es para
+// fechas pasadas recientes (filtros), y el selector abre en hoy en lugar de 18 años atrás. value es un Date (o null) y el componente
 // avisa con onChange(date). La regla de los 18 años NO vive aquí: la valida validateBirthDate.
 // iPhone y Android muestran el selector distinto: en iPhone va dentro de una hoja con "Listo",
 // en Android el sistema abre su propio cuadro de diálogo.
@@ -41,7 +42,9 @@ export default function DateField({
   const insets = useSafeAreaInsets();
   const text = formatDate(value);
   // Fecha con la que abre el selector y límites que se pueden elegir, según el tipo de campo.
-  const limits = kind === 'expiry' ? expiryLimits() : { start: defaultStartDate(), min: undefined, max: maximumDate };
+  let limits = { start: defaultStartDate(), min: undefined, max: maximumDate };
+  if (kind === 'expiry') limits = expiryLimits();
+  if (kind === 'range') limits = { start: new Date(), min: undefined, max: maximumDate };
 
   function openPicker() {
     Keyboard.dismiss();

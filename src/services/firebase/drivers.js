@@ -1,4 +1,5 @@
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { EDITABLE_FIELDS } from '../../utils/profile';
 import { db } from './index';
 
 // CONCEPTO: onSnapshot deja una suscripción abierta que avisa cada vez que el documento cambia
@@ -23,4 +24,15 @@ export function saveDriverRegistration(uid, record) {
 // (La ubicación, que cambia cada pocos segundos, va aparte: ver locations.js.)
 export function setDriverAvailability(uid, isAvailable) {
   return updateDoc(doc(db, 'drivers', uid), { isAvailable });
+}
+
+// CONCEPTO: el conductor solo puede cambiar campos concretos de su perfil. Se actualizan por nombre (rutas con punto
+// para lo anidado, como 'vehicle.color') y NO se escribe un objeto completo: así nunca se pisa por accidente
+// status, isAvailable ni createdAt. Si llega un campo que no esté en la lista de editables, se rechaza antes de
+// escribir. Cada cambio guarda updatedAt. Cuando se endurezcan las reglas de Firestore, también deben impedir
+// que un conductor modifique su propio status.
+export function updateDriverProfile(uid, updates) {
+  const forbidden = Object.keys(updates).filter((field) => !EDITABLE_FIELDS.includes(field));
+  if (forbidden.length > 0) throw new Error(`Campos que no se pueden editar: ${forbidden.join(', ')}`);
+  return updateDoc(doc(db, 'drivers', uid), { ...updates, updatedAt: serverTimestamp() });
 }

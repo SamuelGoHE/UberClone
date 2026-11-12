@@ -35,7 +35,8 @@
         {
           "locationWhenInUsePermission": "UberClone Conductor usa tu ubicación para mostrarte en el mapa y para que los pasajeros cercanos puedan encontrarte cuando estás disponible."
         }
-      ]
+      ],
+      "expo-web-browser"
     ]
   }
 }

@@ -3,10 +3,10 @@ import { DRIVER_STATUS } from '../constants/driverStatus';
 import { subscribeToActiveTrip } from '../services/firebase/trips';
 import { useAuth } from './AuthContext';
 
-// CONCEPTO: Context del viaje activo. Comparte con toda la app el viaje que el conductor tiene en marcha
-// (o null) y si todavía se está comprobando. Vive en Firestore, no en la memoria del celular: por eso, si el
+// CONCEPTO: Context del viaje activo. Comparte con toda la app el viaje que el conductor tiene abierto (en marcha
+// o terminado y por cobrar; o null) y si todavía se está comprobando. Vive en Firestore, no en la memoria del celular: por eso, si el
 // conductor cierra la app a mitad de camino, al abrirla el viaje sigue ahí. RootNavigator lo lee para decidir
-// si muestra el Inicio o la pantalla del viaje.
+// si muestra el Inicio, la pantalla del viaje o el resumen del cobro.
 const TripContext = createContext(null);
 
 export function TripProvider({ children }) {
