@@ -17,6 +17,19 @@ export function toISODate(date) {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
+// CONCEPTO: lee un texto AAAA-MM-DD (como se guardan las fechas en Firestore) y lo convierte en un Date. Arma la
+// fecha con año, mes y día por separado, en hora LOCAL. NO se usa new Date('1995-03-14'): JavaScript lo interpreta
+// en UTC y en Colombia (UTC-5) mostraría el día anterior. Devuelve null si el texto no es una fecha real
+// (por ejemplo 2026-02-31, que new Date convertiría en marzo sin avisar).
+export function parseISODate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? ''));
+  if (!match) return null;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
+}
+
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 // Fecha y hora cortas de un viaje, a partir de milisegundos: "08 nov · 14:32". Se arma a mano (y no con

@@ -4,6 +4,7 @@ import MapView, { Circle, Marker, Polyline } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import IncomingRequestCard from '../../components/trip/IncomingRequestCard';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import useAvailability from '../../hooks/useAvailability';
 import useDriverLocation from '../../hooks/useDriverLocation';
 import useTripRequests from '../../hooks/useTripRequests';
@@ -20,6 +21,7 @@ const FALLBACK_REGION = { latitude: 6.2442, longitude: -75.5812, latitudeDelta: 
 // No disponible o al salir de la pantalla, el seguimiento se detiene (lo hace useDriverLocation).
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const mapRef = useRef(null);
   const centeredRef = useRef(false);
@@ -109,8 +111,8 @@ export default function HomeScreen({ navigation }) {
   const permissionDenied = permission === 'denied';
   const switchDisabled = !ready || permission !== 'granted';
 
-  let subtitle = 'Activa el interruptor para recibir viajes';
-  if (available) subtitle = location ? 'Buscando solicitudes cerca de ti' : 'Obteniendo tu ubicación…';
+  let subtitle = t('home.subtitleOff');
+  if (available) subtitle = location ? t('home.subtitleSearching') : t('home.subtitleLocating');
 
   return (
     <View style={styles.container}>
@@ -158,7 +160,7 @@ export default function HomeScreen({ navigation }) {
           style={styles.menuButton}
           onPress={() => navigation.openDrawer()}
           accessibilityRole="button"
-          accessibilityLabel="Abrir menú"
+          accessibilityLabel={t('home.menu')}
         >
           <View style={styles.menuBar} />
           <View style={styles.menuBar} />
@@ -166,7 +168,7 @@ export default function HomeScreen({ navigation }) {
         </Pressable>
         <View style={styles.pill}>
           <View style={[styles.pillDot, { backgroundColor: available ? colors.success : colors.textMuted }]} />
-          <Text style={styles.pillText}>{available ? 'En línea' : 'Fuera de línea'}</Text>
+          <Text style={styles.pillText}>{available ? t('home.online') : t('home.offline')}</Text>
         </View>
         {/* Espacio del mismo ancho que el botón, para que la píldora quede centrada. */}
         <View style={styles.menuSpacer} />
@@ -184,26 +186,24 @@ export default function HomeScreen({ navigation }) {
         <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
           <View style={styles.handle} />
           <View style={styles.headings}>
-            <Text style={styles.title}>{available ? 'Estás disponible' : 'No estás disponible'}</Text>
+            <Text style={styles.title}>{available ? t('home.available') : t('home.unavailable')}</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
           </View>
 
           {permissionDenied ? (
             <View style={styles.warning}>
-              <Text style={styles.warningText}>
-                Necesitamos tu ubicación para ponerte disponible. Actívala en Ajustes.
-              </Text>
+              <Text style={styles.warningText}>{t('home.permission')}</Text>
               <Pressable onPress={() => Linking.openSettings()} accessibilityRole="button">
-                <Text style={styles.warningLink}>Abrir Ajustes</Text>
+                <Text style={styles.warningLink}>{t('home.openSettings')}</Text>
               </Pressable>
             </View>
           ) : null}
 
           <View style={styles.switchRow}>
             <View style={styles.switchTexts}>
-              <Text style={styles.switchTitle}>{available ? 'Disponible' : 'No disponible'}</Text>
+              <Text style={styles.switchTitle}>{available ? t('home.switchOn') : t('home.switchOff')}</Text>
               <Text style={styles.switchHint}>
-                {available ? 'Recibirás solicitudes de viaje' : 'No recibirás solicitudes'}
+                {available ? t('home.hintOn') : t('home.hintOff')}
               </Text>
             </View>
             <Switch
@@ -212,7 +212,7 @@ export default function HomeScreen({ navigation }) {
               disabled={switchDisabled}
               trackColor={{ false: colors.border, true: colors.success }}
               ios_backgroundColor={colors.border}
-              accessibilityLabel="Disponible"
+              accessibilityLabel={t('home.switchOn')}
             />
           </View>
 
@@ -220,7 +220,7 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.account}>
             <View style={styles.accountDot} />
-            <Text style={styles.accountText}>Cuenta aprobada</Text>
+            <Text style={styles.accountText}>{t('drawer.approved')}</Text>
           </View>
         </View>
       )}
