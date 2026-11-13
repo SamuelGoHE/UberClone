@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #22
 import { useEffect, useState } from 'react';
 import { subscribeToTripRequests } from '../services/firebase/trips';
 import { selectPendingRequests } from '../utils/tripRequests';

@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #24, #25
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatMoney } from '../../utils/formatMoney';

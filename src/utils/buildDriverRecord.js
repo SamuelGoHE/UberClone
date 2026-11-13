@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #17, #19
 import { PRICING } from '../config/pricing.js';
 import { DRIVER_STATUS } from '../constants/driverStatus.js';
 import { requiresTechnicalReview } from './documentValidators.js';

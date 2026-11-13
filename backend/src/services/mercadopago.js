@@ -1,6 +1,10 @@
+// AI-assisted: see docs/AI_LOG.md #27
 import { config } from '../config.js';
 
 const API = 'https://api.mercadopago.com';
+// Si Mercado Pago no responde en este tiempo, se corta y se avisa: sin límite, una caída de la pasarela dejaría
+// colgada la petición de la app para siempre.
+const TIMEOUT_MS = 15000;
 
 // Error de la pasarela: el servidor lo traduce a una respuesta 502 (la pasarela falló, no el cliente).
 export class GatewayError extends Error {}
@@ -11,9 +15,12 @@ async function mpFetch(path, options = {}) {
     response = await fetch(`${API}${path}`, {
       ...options,
       headers: { Authorization: `Bearer ${config.mercadoPagoToken}`, 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-  } catch {
-    throw new GatewayError('No se pudo conectar con Mercado Pago.');
+  } catch (error) {
+    throw new GatewayError(
+      error.name === 'TimeoutError' ? 'Mercado Pago tardó demasiado en responder.' : 'No se pudo conectar con Mercado Pago.',
+    );
   }
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new GatewayError(`Mercado Pago respondió ${response.status}: ${body.message ?? 'error'}`);

@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #23
 import { useEffect, useRef, useState } from 'react';
 import { getRoute } from '../services/maps/osrm';
 

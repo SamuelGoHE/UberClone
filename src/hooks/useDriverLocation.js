@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #20
 import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import * as Location from 'expo-location';

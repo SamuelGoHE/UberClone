@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #9, #15, #17, #19
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomTabBar, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import SubmitBar from '../components/registration/SubmitBar';

@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #13
 import { useRef, useState } from 'react';
 import { Image, Keyboard, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';

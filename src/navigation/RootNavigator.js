@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #9, #20, #23, #26, #29
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';

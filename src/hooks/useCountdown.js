@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #22
 import { useEffect, useRef, useState } from 'react';
 
 // CONCEPTO: custom hook de cuenta regresiva. Cuenta desde `seconds` cada vez que `resetKey` cambia (por

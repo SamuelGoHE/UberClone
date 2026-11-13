@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #20
 // CONCEPTO: la app NUNCA habla directamente con Mercado Pago ni conoce su token secreto: le pide al backend (la
 // carpeta backend/, que corre en el computador) que haga el cobro. Este servicio es el único lugar de la app que
 // conoce las direcciones del backend; el resto de la app solo llama createPayment y refreshPayment.

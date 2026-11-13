@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #23, #26
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { DRIVER_STATUS } from '../constants/driverStatus';
 import { subscribeToActiveTrip } from '../services/firebase/trips';

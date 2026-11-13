@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #30
 // CONCEPTO: diccionario de textos por idioma. La pantalla pide un texto por su clave (t('profile.title')) y recibe
 // el del idioma elegido. Si una clave no existe en inglés, se usa el español, y si tampoco, la clave misma: una
 // traducción olvidada nunca deja la pantalla vacía. {nombre} se reemplaza por un valor (ver LanguageContext).

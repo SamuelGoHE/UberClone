@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #10, #15, #16, #19
 import { CATEGORIES } from '../constants/categories.js';
 
 // CONCEPTO: cada validador es una función pura. Recibe un valor y devuelve null si es válido

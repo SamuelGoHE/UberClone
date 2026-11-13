@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #29
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchTripHistoryPage } from '../services/firebase/trips';
 import { buildHistoryRange } from '../utils/historyFilters';

@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #17
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { REQUIRED_TABS } from '../../constants/registration';
 import { useRegistration } from '../../context/RegistrationContext';

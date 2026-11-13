@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #29
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CATEGORY_OPTIONS } from '../../constants/registration';
 import { formatDateTime } from '../../utils/formatDate';

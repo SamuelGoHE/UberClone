@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #29
 // SIMULADOR DE PASAJERO: CALIFICAR UN VIAJE. El pasajero califica el viaje al terminar (1 a 5 estrellas). Como la
 // app del pasajero no existe, este script escribe esa calificación en el viaje (campo rating, del modelo del
 // enunciado). No confundir con passengerRating, que es la reputación del pasajero y la guarda send-request.mjs.

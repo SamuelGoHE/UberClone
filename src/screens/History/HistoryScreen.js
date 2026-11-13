@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #29
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import ClockIcon from '../../components/common/ClockIcon';

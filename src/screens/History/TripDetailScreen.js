@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #29
 import { useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';

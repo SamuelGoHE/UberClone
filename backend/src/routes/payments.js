@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #27
 import { Router } from 'express';
 import { FieldValue } from 'firebase-admin/firestore';
 import { HttpError } from '../errors.js';

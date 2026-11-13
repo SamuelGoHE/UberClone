@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #20, #23, #28, #29, #30
 import { StyleSheet, Text, View } from 'react-native';
 import {
   createDrawerNavigator,

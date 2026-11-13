@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #12, #17, #29, #30
 // CONCEPTO: convierte un Date en el texto DD/MM/AAAA que se muestra en pantalla (14/03/1995).
 // padStart agrega ceros a la izquierda: 5 -> "05". Se usan los getters locales (getDate, getMonth)
 // y no los UTC, para que la fecha mostrada sea la que el usuario eligió y no "corra" un día.

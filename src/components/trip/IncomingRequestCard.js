@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #22
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

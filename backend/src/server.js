@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #27
 import express from 'express';
 import { config } from './config.js';
 import paymentsRouter from './routes/payments.js';

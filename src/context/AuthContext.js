@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #6, #7, #10
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   createUserWithEmailAndPassword,

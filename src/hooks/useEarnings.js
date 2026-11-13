@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #28
 import { useMemo } from 'react';
 import { computeBalance, summarizeEarnings } from '../utils/earnings';
 import useDriverTrips from './useDriverTrips';
