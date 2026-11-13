@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #19
 import { TECHNICAL_REVIEW_AFTER_YEARS } from '../constants/registration.js';
 import { validateEmail, validateImage } from './validators.js';
 

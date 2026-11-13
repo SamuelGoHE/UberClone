@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #6, #17, #20, #30
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { EDITABLE_FIELDS } from '../../utils/profile';
 import { db } from './index';

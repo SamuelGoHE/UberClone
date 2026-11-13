@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #28
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import SegmentedField from '../../components/forms/SegmentedField';

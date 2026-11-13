@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #30
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LANGUAGES, translate } from '../i18n/translations';

@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #29
 // DATOS DE PRUEBA PARA EL HISTORIAL. Crea viajes ya cobrados (status "paid") con fechas repartidas en los últimos
 // 70 días, para poder probar la paginación (20 por carga) y los filtros. Todos llevan simulated: true, y el
 // comando --clear los borra sin tocar tus viajes reales.

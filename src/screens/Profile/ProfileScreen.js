@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #30
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import DateField from '../../components/forms/DateField';

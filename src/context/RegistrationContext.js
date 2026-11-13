@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #15, #16, #17, #19
 import { createContext, useCallback, useContext, useMemo, useReducer, useState } from 'react';
 import { REQUIRED_TABS } from '../constants/registration';
 import { useAuth } from './AuthContext';

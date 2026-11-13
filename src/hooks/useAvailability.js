@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #20
 import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setDriverAvailability } from '../services/firebase/drivers';

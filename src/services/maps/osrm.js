@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #23
 // CONCEPTO: servicio de rutas. Usa OSRM (https://project-osrm.org), un servicio gratuito basado en
 // OpenStreetMap, en lugar de Google Directions (que exige facturación). El resto de la app solo
 // conoce getRoute(); si algún día se cambia a Google, solo se reescribe este archivo.

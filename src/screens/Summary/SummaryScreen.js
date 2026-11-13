@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #26, #29
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';

@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #22, #23, #24, #25, #26, #28, #29
 import {
   collection,
   doc,

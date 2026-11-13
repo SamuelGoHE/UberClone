@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #30
 import { validateExpiryDate } from './documentValidators.js';
 import { parseISODate, toISODate } from './formatDate.js';
 import { validateCapacity, validateEmail, validateFullName, validatePhone, validateSelection } from './validators.js';

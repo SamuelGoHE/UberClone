@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #1, #2, #14
 import { PRICING } from '../config/pricing.js';
 
 // CONCEPTO: función pura (mismas entradas -> mismas salidas, sin efectos). Se usa igual

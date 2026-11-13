@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #21
 // CONCEPTO: estimación local de un viaje, sin servicios externos. Se usa solo en el simulador de pasajero.
 // El viaje real (la ruta que dibuja la app) se calcula más adelante con un servicio de rutas.
 const EARTH_RADIUS_KM = 6371;

@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #29
 // Puntos que se guardan de cada ruta. Un documento de Firestore pesa como máximo 1 MiB y OSRM devuelve cientos de
 // puntos por ruta (y miles en un viaje largo): con ~100 se dibuja igual de bien y el documento se mantiene liviano.
 export const MAX_SAVED_POINTS = 100;

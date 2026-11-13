@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #21
 // SIMULADOR DE PASAJERO. Esta app es solo la del conductor, así que no existe quien pida los viajes.
 // Este script hace de pasajero: crea una solicitud en Firestore (colección trips) dirigida al conductor
 // que esté disponible. Reutiliza calculateFare, la misma función de tarifa de la app. La distancia y la

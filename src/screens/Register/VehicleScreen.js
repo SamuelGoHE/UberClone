@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #9, #16, #24, #25
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

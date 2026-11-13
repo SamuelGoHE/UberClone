@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #29
 import { PERIODS, periodStart } from './earnings.js';
 
 // Filtros de periodo del Historial: los mismos de Ganancias más el rango de fechas.
